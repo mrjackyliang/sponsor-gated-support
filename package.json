@@ -1,0 +1,78 @@
+{
+  "name": "sponsor-gated-support",
+  "displayName": "Sponsor Gated Support",
+  "version": "1.0.0",
+  "description": "A GitHub Action designed to ensure that only sponsors and recognized contributors have access to support",
+  "main": "./build/index.js",
+  "exports": "./build/index.js",
+  "type": "module",
+  "private": false,
+  "scripts": {
+    "run": "local-action run . src/index.ts .env",
+    "build": "npm-run-all --sequential build:*",
+    "build:reset": "rimraf ./build",
+    "build:lint": "npx eslint ./src",
+    "build:ncc": "npx ncc build src/index.ts -o build --source-map --license licenses.txt",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build"
+  },
+  "types": "",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mrjackyliang/sponsor-gated-support.git"
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/mrjackyliang"
+    },
+    {
+      "type": "custom",
+      "url": "https://liang.nyc/paypal"
+    }
+  ],
+  "keywords": [
+    "actions",
+    "github-sponsors",
+    "github-sponsor-action",
+    "customer-service"
+  ],
+  "author": {
+    "name": "Jacky Liang",
+    "email": "hello@mrjackyliang.com",
+    "url": "https://www.mrjackyliang.com"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/mrjackyliang/sponsor-gated-support/issues"
+  },
+  "files": [
+    "./build"
+  ],
+  "homepage": "https://github.com/mrjackyliang/sponsor-gated-support",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@actions/core": "1.10.1",
+    "@actions/github": "6.0.0",
+    "json-to-graphql-query": "2.2.5",
+    "lodash": "4.17.21",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@github/local-action": "1.5.1",
+    "@types/lodash": "4.17.7",
+    "@types/node": "22.1.0",
+    "@typescript-eslint/eslint-plugin": "7.17.0",
+    "@typescript-eslint/parser": "7.17.0",
+    "@vercel/ncc": "0.38.1",
+    "eslint": "8.57.0",
+    "eslint-config-airbnb-base": "15.0.0",
+    "eslint-config-airbnb-typescript": "18.0.0",
+    "eslint-plugin-import": "2.29.1",
+    "npm-run-all": "4.1.5",
+    "rimraf": "6.0.1",
+    "typescript": "5.5.4"
+  }
+}

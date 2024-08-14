@@ -1,0 +1,49 @@
+name: "Sponsor Gated Support"
+description: "A GitHub Action designed to ensure that only sponsors and recognized contributors have access to support"
+author: "Jacky Liang"
+
+branding:
+  icon: "star"
+  color: "orange"
+
+inputs:
+  GITHUB_TOKEN:
+    description: "Personal access token from GitHub to fetch your sponsors"
+    required: true
+    default: ""
+  ISSUE_LABELS:
+    description: "Only set limits on issues with these labels"
+    required: false
+    default: "support"
+  ISSUE_LIMIT_COMMENTER:
+    description: "Prevent users other than the sponsor (that opened the issue) and contributor from commenting on the issue"
+    required: false
+    default: "true"
+  ISSUE_LOCK_ON_CLOSE:
+    description: "Lock issues as soon as they become closed"
+    required: false
+    default: "true"
+  IS_ORGANIZATION:
+    description: "If this workflow is being used on an organization-owned repository, this should be set to true"
+    required: false
+    default: "false"
+  SPONSOR_ACTIVE_ONLY:
+    description: "Allow only users on GitHub that are currently sponsoring you to open issues"
+    required: false
+    default: "true"
+  SPONSOR_EXEMPT_FILE_LOCATION:
+    description: "A list of users on GitHub that are exempt from requiring to sponsor you to open issues"
+    required: false
+    default: "./SPONSOR_EXEMPT"
+  SPONSOR_MINIMUM:
+    description: "Set a minimum sponsorship threshold (in cents) to allow only sponsors that reach this amount the ability to open issues"
+    required: false
+    default: "0"
+
+outputs:
+  result:
+    description: "The success or failure response after the action has completed"
+
+runs:
+  using: "node20"
+  main: "./build/index.js"
