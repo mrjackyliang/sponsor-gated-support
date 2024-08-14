@@ -96,7 +96,7 @@ export async function getSponsors(config: GetSponsorsConfig, cursor: GetSponsors
           __args: {
             first: 100,
             includePrivate: true,
-            sponsorActiveOnly,
+            activeOnly: sponsorActiveOnly,
             after: cursor,
           },
           nodes: {

@@ -52903,7 +52903,7 @@ async function getSponsors(config, cursor = null, results = []) {
                     __args: {
                         first: 100,
                         includePrivate: true,
-                        sponsorActiveOnly,
+                        activeOnly: sponsorActiveOnly,
                         after: cursor,
                     },
                     nodes: {
