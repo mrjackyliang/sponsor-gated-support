@@ -70,9 +70,9 @@ export function getContext(): GetContextReturns {
  */
 export async function getSponsors(config: GetSponsorsConfig, cursor: GetSponsorsCursor = null, results: GetSponsorsResults = []): GetSponsorsReturns {
   const {
-    activeOnly,
     githubToken,
     isOrganization,
+    sponsorActiveOnly,
     sponsorMinimum,
   } = config;
 
@@ -96,7 +96,7 @@ export async function getSponsors(config: GetSponsorsConfig, cursor: GetSponsors
           __args: {
             first: 100,
             includePrivate: true,
-            activeOnly,
+            sponsorActiveOnly,
             after: cursor,
           },
           nodes: {

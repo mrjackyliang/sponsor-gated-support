@@ -8,7 +8,8 @@ import { z } from 'zod';
 export const configuration = z.object({
   githubToken: z.string()
     .startsWith('ghp_'),
-  issueLabels: z.string(),
+  issueLabels: z.string()
+    .transform((value) => value.split(',')),
   issueLimitCommenter: z.enum(['true', 'false'])
     .transform((value) => value === 'true'),
   issueLockOnClose: z.enum(['true', 'false'])
