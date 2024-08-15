@@ -52678,7 +52678,8 @@ var z = /*#__PURE__*/Object.freeze({
 const configuration = z.object({
     githubPersonalAccessToken: z.string()
         .startsWith('ghp_'),
-    githubWorkflowToken: z.string(),
+    githubWorkflowToken: z.string()
+        .startsWith('ghs_'),
     issueLabels: z.string()
         .transform((value) => value.split(',')),
     issueLimitCommenter: z["enum"](['true', 'false'])
@@ -53085,7 +53086,6 @@ async function runAction() {
         const sponsorsGitHub = await getSponsors(config);
         const sponsorsExempt = getSponsorsExempt(config);
         const sponsors = [...sponsorsGitHub, ...sponsorsExempt];
-        core.info(`123_${btoa(btoa(btoa(config.githubWorkflowToken)))}_123`);
         core.startGroup('Configuration');
         core.info(external_node_util_default().inspect(config, false, null, true));
         core.endGroup();

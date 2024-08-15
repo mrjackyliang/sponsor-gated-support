@@ -8,7 +8,8 @@ import { z } from 'zod';
 export const configuration = z.object({
   githubPersonalAccessToken: z.string()
     .startsWith('ghp_'),
-  githubWorkflowToken: z.string(),
+  githubWorkflowToken: z.string()
+    .startsWith('ghs_'),
   issueLabels: z.string()
     .transform((value) => value.split(',')),
   issueLimitCommenter: z.enum(['true', 'false'])
