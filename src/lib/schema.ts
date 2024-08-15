@@ -118,11 +118,6 @@ export const sponsorshipsAsMaintainer = z.object({
     sponsorEntity: z.object({
       login: z.string(),
     }).nullable(),
-    createdAt: z.string(),
-    privacyLevel: z.union([
-      z.literal('PUBLIC'),
-      z.literal('PRIVATE'),
-    ]),
     tier: z.object({
       monthlyPriceInCents: z.number(),
     }).nullable(),
