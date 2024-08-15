@@ -53037,7 +53037,6 @@ async function issueCommentAction(payload, config) {
         core.setOutput('result', false);
         return;
     }
-    core.info(`Running tasks for when an issue comment is ${data.action}`);
     if (!config.issueLimitCommenter) {
         core.setFailed('An issue comment was created or edited, however the "ISSUE_LIMIT_COMMENTER" setting is set to "false"');
         core.setOutput('result', false);
@@ -53049,6 +53048,7 @@ async function issueCommentAction(payload, config) {
         core.setOutput('result', true);
         return;
     }
+    core.info(`Running tasks for when an issue comment is ${data.action}`);
     if (data.comment.user === null
         || data.issue.user === null) {
         core.setFailed('An issue comment was created or edited, however the comment and/or issue user information does not exist');

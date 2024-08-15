@@ -60,8 +60,6 @@ export async function issueCommentAction(payload: IssueCommentActionPayload, con
     return;
   }
 
-  core.info(`Running tasks for when an issue comment is ${data.action}`);
-
   // Check for the correct configuration (so runner resources aren't wasted).
   if (!config.issueLimitCommenter) {
     core.setFailed('An issue comment was created or edited, however the "ISSUE_LIMIT_COMMENTER" setting is set to "false"');
@@ -80,6 +78,8 @@ export async function issueCommentAction(payload: IssueCommentActionPayload, con
 
     return;
   }
+
+  core.info(`Running tasks for when an issue comment is ${data.action}`);
 
   // Check if the user exists for the issue.
   if (
