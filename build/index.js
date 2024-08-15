@@ -53059,8 +53059,11 @@ async function issueCommentAction(payload, config) {
         return;
     }
     if (data.comment.user.login === data.issue.user.login
-        || data.comment.author_association === 'OWNER') {
-        core.info('Skipping "issue_comment" action, issue comment is made by either issue creator or owner');
+        || data.comment.author_association === 'MEMBER'
+        || data.comment.author_association === 'OWNER'
+        || data.comment.author_association === 'CONTRIBUTOR'
+        || data.comment.author_association === 'COLLABORATOR') {
+        core.info('Skipping "issue_comment" action, issue comment is made by either issue creator, member, owner, contributor, or collaborator');
         core.setOutput('result', true);
         return;
     }
@@ -53104,7 +53107,10 @@ async function issuesAction(payload, config, sponsors) {
         }
         const { login } = data.issue.user;
         if (sponsorsLogins.includes(login)
-            || data.issue.author_association === 'OWNER') {
+            || data.issue.author_association === 'MEMBER'
+            || data.issue.author_association === 'OWNER'
+            || data.issue.author_association === 'CONTRIBUTOR'
+            || data.issue.author_association === 'COLLABORATOR') {
             core.info('Adding issue comment based on "ISSUE_MESSAGE_WELCOME"');
             await addIssueComment(data.issue.node_id, config.issueMessageWelcome, config);
         }

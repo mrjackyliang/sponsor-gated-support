@@ -92,12 +92,15 @@ export async function issueCommentAction(payload: IssueCommentActionPayload, con
     return;
   }
 
-  // Skip if comment ownership is the issue creator or owner.
+  // Skip if comment ownership is the issue creator, member, owner, contributor, or collaborator.
   if (
     data.comment.user.login === data.issue.user.login
+    || data.comment.author_association === 'MEMBER'
     || data.comment.author_association === 'OWNER'
+    || data.comment.author_association === 'CONTRIBUTOR'
+    || data.comment.author_association === 'COLLABORATOR'
   ) {
-    core.info('Skipping "issue_comment" action, issue comment is made by either issue creator or owner');
+    core.info('Skipping "issue_comment" action, issue comment is made by either issue creator, member, owner, contributor, or collaborator');
     core.setOutput('result', true);
 
     return;
@@ -179,10 +182,13 @@ export async function issuesAction(payload: IssuesActionPayload, config: IssuesA
 
     const { login } = data.issue.user;
 
-    // Check if the user is either sponsoring, in the exempt list, or is an owner.
+    // Check if the user is either sponsoring (including exempt list), a member, an owner, a contributor, or a collaborator.
     if (
       sponsorsLogins.includes(login)
+      || data.issue.author_association === 'MEMBER'
       || data.issue.author_association === 'OWNER'
+      || data.issue.author_association === 'CONTRIBUTOR'
+      || data.issue.author_association === 'COLLABORATOR'
     ) {
       core.info('Adding issue comment based on "ISSUE_MESSAGE_WELCOME"');
       await addIssueComment(data.issue.node_id, config.issueMessageWelcome, config);
