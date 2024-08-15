@@ -11,13 +11,16 @@ export const configuration = z.object({
   githubWorkflowToken: z.string()
     .startsWith('ghs_'),
   issueLabels: z.string()
+    .transform((value) => ((value === '') ? 'support' : value))
     .transform((value) => value.split(',')),
   issueLimitCommenter: z.enum(['true', 'false'])
     .transform((value) => value === 'true'),
   issueLockOnClose: z.enum(['true', 'false'])
     .transform((value) => value === 'true'),
-  issueMessageNotSponsor: z.string(),
-  issueMessageWelcome: z.string(),
+  issueMessageNotSponsor: z.string()
+    .transform((value) => ((value === '') ? 'Apologies! Only sponsoring users are allowed to open issues. Please sponsor the owner of this repository, then try again.' : value)),
+  issueMessageWelcome: z.string()
+    .transform((value) => ((value === '') ? 'Thank you for your support! We appreciate your sponsorship and are here to help. We will review your issue and get back to you as soon as possible.' : value)),
   isOrganization: z.enum(['true', 'false'])
     .transform((value) => value === 'true'),
   sponsorActiveOnly: z.enum(['true', 'false'])
