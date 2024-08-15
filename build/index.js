@@ -53044,7 +53044,8 @@ async function issuesAction(payload, config, sponsors) {
             return;
         }
         const { login } = data.issue.user;
-        if (sponsorsLogins.includes(login)) {
+        if (sponsorsLogins.includes(login)
+            || data.issue.author_association === 'OWNER') {
             await addIssueComment(data.issue.node_id, config.issueMessageWelcome, config);
         }
         else {

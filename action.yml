@@ -34,7 +34,7 @@ inputs:
   ISSUE_MESSAGE_WELCOME:
     description: "Message to send when a sponsoring user opens an issue"
     required: false
-    default: "Thank you for your support! We appreciate your sponsorship and are here to help. We'll review your issue and get back to you as soon as possible.\n\nPlease note that this issue is protected and only you + the contributors can comment on this thread. All other comments will be deleted automatically."
+    default: "Thank you for your support! We appreciate your sponsorship and are here to help. We'll review your issue and get back to you as soon as possible.\r\n\r\nPlease note that this issue is protected and only you + the contributors can comment on this thread. All other comments will be deleted automatically."
   IS_ORGANIZATION:
     description: "If this workflow is being used on an organization-owned repository"
     required: false

@@ -131,8 +131,11 @@ export async function issuesAction(payload: IssuesActionPayload, config: IssuesA
 
     const { login } = data.issue.user;
 
-    // If user creating the issue is not in the sponsor list.
-    if (sponsorsLogins.includes(login)) {
+    // Check if the user is either sponsoring, in the exempt list, or is an owner.
+    if (
+      sponsorsLogins.includes(login)
+      || data.issue.author_association === 'OWNER'
+    ) {
       await addIssueComment(data.issue.node_id, config.issueMessageWelcome, config);
     } else {
       await addIssueComment(data.issue.node_id, config.issueMessageNotSponsor, config);
