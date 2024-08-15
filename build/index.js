@@ -52676,7 +52676,9 @@ var z = /*#__PURE__*/Object.freeze({
 ;// CONCATENATED MODULE: ./src/lib/schema.ts
 
 const configuration = z.object({
-    githubToken: z.string()
+    githubPersonalAccessToken: z.string()
+        .startsWith('ghp_'),
+    githubWorkflowToken: z.string()
         .startsWith('ghp_'),
     issueLabels: z.string()
         .transform((value) => value.split(',')),
@@ -52684,6 +52686,8 @@ const configuration = z.object({
         .transform((value) => value === 'true'),
     issueLockOnClose: z["enum"](['true', 'false'])
         .transform((value) => value === 'true'),
+    issueMessageNotSponsor: z.string(),
+    issueMessageWelcome: z.string(),
     isOrganization: z["enum"](['true', 'false'])
         .transform((value) => value === 'true'),
     sponsorActiveOnly: z["enum"](['true', 'false'])
@@ -52745,6 +52749,17 @@ const issuesPayload = z.object({
             z.literal('NONE'),
             z.literal('OWNER'),
         ]),
+        labels: z.array(z.object({
+            color: z.string(),
+            default: z.boolean(),
+            description: z.string().nullable(),
+            id: z.number(),
+            name: z.string(),
+            node_id: z.string(),
+            url: z.string(),
+        })),
+        locked: z.boolean(),
+        node_id: z.string(),
         user: z.object({
             login: z.string(),
         }).nullable(),
@@ -52771,79 +52786,6 @@ const sponsorshipsAsMaintainer = z.object({
     totalCount: z.number(),
 });
 
-;// CONCATENATED MODULE: ./src/lib/action.ts
-
-
-
-
-function issueCommentAction(payload, config, sponsors) {
-    if (lodash_default().isEmpty(payload)) {
-        core.setFailed('The payload for "issue_comment" is empty');
-        core.setOutput('result', false);
-        return;
-    }
-    const parsedPayload = issueCommentPayload.safeParse(payload);
-    if (!parsedPayload.success) {
-        core.setFailed('The payload for "issue_comment" is invalid');
-        core.setOutput('result', false);
-        return;
-    }
-    const { data } = parsedPayload;
-    if (data.action !== 'created'
-        && data.action !== 'edited') {
-        core.setFailed(`The "${data.action}" action is not supported`);
-        core.setOutput('result', false);
-        return;
-    }
-    console.log('issue_comment', external_node_util_default().inspect(data));
-    console.log('issue_comment', external_node_util_default().inspect(config));
-    console.log('issue_comment', external_node_util_default().inspect(sponsors));
-    core.setOutput('result', true);
-}
-function issuesAction(payload, config, sponsors) {
-    if (lodash_default().isEmpty(payload)) {
-        core.setFailed('The payload for "issues" is empty');
-        core.setOutput('result', false);
-        return;
-    }
-    const parsedPayload = issuesPayload.safeParse(payload);
-    if (!parsedPayload.success) {
-        core.setFailed('The payload for "issues" is invalid');
-        core.setOutput('result', false);
-        return;
-    }
-    const { data } = parsedPayload;
-    if (data.action !== 'opened'
-        && data.action !== 'closed') {
-        core.setFailed(`The "${data.action}" action is not supported`);
-        core.setOutput('result', false);
-        return;
-    }
-    if (config.issueLabels.length !== 0) {
-        core.setOutput('result', true);
-        return;
-    }
-    if (data.action === 'opened') {
-        if (data.issue.user === null) {
-            core.setFailed('The issue was opened, however the user information does not exist');
-            core.setOutput('result', false);
-            return;
-        }
-        const { login } = data.issue.user;
-        if (sponsors.map((sponsor) => sponsor.login).includes(login)) {
-        }
-    }
-    if (data.action === 'closed') {
-        if (!config.issueLockOnClose) {
-            core.setFailed('The issue was closed, however the "ISSUE_LOCK_ON_CLOSE" is set to "false"');
-            core.setOutput('result', false);
-            return;
-        }
-    }
-    console.log('issues', external_node_util_default().inspect(data));
-    core.setOutput('result', true);
-}
-
 // EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
 var github = __nccwpck_require__(5438);
 // EXTERNAL MODULE: ./node_modules/json-to-graphql-query/lib/index.js
@@ -52862,20 +52804,65 @@ var external_node_path_default = /*#__PURE__*/__nccwpck_require__.n(external_nod
 
 
 
+async function addIssueComment(nodeId, body, config) {
+    const { githubWorkflowToken } = config;
+    const query = {
+        mutation: {
+            addComment: {
+                __args: {
+                    input: {
+                        subjectId: nodeId,
+                        body,
+                    },
+                },
+                subject: {
+                    id: true,
+                },
+            },
+        },
+    };
+    const octokit = github.getOctokit(githubWorkflowToken);
+    await octokit.graphql((0,lib.jsonToGraphQLQuery)(query));
+}
+async function closeIssue(nodeId, config) {
+    const { githubWorkflowToken } = config;
+    const query = {
+        mutation: {
+            closeIssue: {
+                __args: {
+                    input: {
+                        issueId: nodeId,
+                    },
+                },
+                issue: {
+                    id: true,
+                },
+            },
+        },
+    };
+    const octokit = github.getOctokit(githubWorkflowToken);
+    await octokit.graphql((0,lib.jsonToGraphQLQuery)(query));
+}
 function getConfig() {
-    const githubToken = core.getInput('GITHUB_TOKEN');
+    const githubPersonalAccessToken = core.getInput('GITHUB_PERSONAL_ACCESS_TOKEN');
+    const githubWorkflowToken = core.getInput('GITHUB_WORKFLOW_TOKEN');
     const issueLabels = core.getInput('ISSUE_LABELS');
     const issueLimitCommenter = core.getInput('ISSUE_LIMIT_COMMENTER');
     const issueLockOnClose = core.getInput('ISSUE_LOCK_ON_CLOSE');
+    const issueMessageNotSponsor = core.getInput('ISSUE_MESSAGE_NOT_SPONSOR');
+    const issueMessageWelcome = core.getInput('ISSUE_MESSAGE_WELCOME');
     const isOrganization = core.getInput('IS_ORGANIZATION');
     const sponsorActiveOnly = core.getInput('SPONSOR_ACTIVE_ONLY');
     const sponsorExemptFileLocation = core.getInput('SPONSOR_EXEMPT_FILE_LOCATION');
     const sponsorMinimum = core.getInput('SPONSOR_MINIMUM');
     return configuration.parse({
-        githubToken,
+        githubPersonalAccessToken,
+        githubWorkflowToken,
         issueLabels,
         issueLimitCommenter,
         issueLockOnClose,
+        issueMessageNotSponsor,
+        issueMessageWelcome,
         isOrganization,
         sponsorActiveOnly,
         sponsorExemptFileLocation,
@@ -52886,7 +52873,7 @@ function getContext() {
     return github.context;
 }
 async function getSponsors(config, cursor = null, results = []) {
-    const { githubToken, isOrganization, sponsorActiveOnly, sponsorMinimum, } = config;
+    const { githubPersonalAccessToken, isOrganization, sponsorActiveOnly, sponsorMinimum, } = config;
     if (isOrganization
         && typeof process.env.GITHUB_REPOSITORY_OWNER !== 'string') {
         throw new Error('Organization mode enabled, but GitHub repository owner environment variable does not exist');
@@ -52932,15 +52919,16 @@ async function getSponsors(config, cursor = null, results = []) {
             },
         },
     };
-    const octokit = github.getOctokit(githubToken);
+    const octokit = github.getOctokit(githubPersonalAccessToken);
     const octokitResponse = await octokit.graphql((0,lib.jsonToGraphQLQuery)(query));
     const octokitResponsePath = (isOrganization) ? ['organization', 'sponsorshipsAsMaintainer'] : ['viewer', 'sponsorshipsAsMaintainer'];
-    const data = lodash_default().get(octokitResponse, octokitResponsePath, {});
-    const parsedData = sponsorshipsAsMaintainer.safeParse(data);
-    if (!parsedData.success) {
+    const sponsorships = lodash_default().get(octokitResponse, octokitResponsePath, {});
+    const parsedSponsorships = sponsorshipsAsMaintainer.safeParse(sponsorships);
+    if (!parsedSponsorships.success) {
         return results;
     }
-    const newResults = [...results, ...parsedData.data.nodes.map((node) => {
+    const { data } = parsedSponsorships;
+    const newResults = [...results, ...data.nodes.map((node) => {
             const nodeSponsorEntityLogin = node.sponsorEntity?.login;
             const nodeTierMonthlyPriceInCents = node.tier?.monthlyPriceInCents;
             if (nodeSponsorEntityLogin === undefined
@@ -52956,8 +52944,8 @@ async function getSponsors(config, cursor = null, results = []) {
                 amount: nodeTierMonthlyPriceInCents,
             };
         }).filter((node) => node !== null)];
-    if (parsedData.data.pageInfo.hasNextPage) {
-        return getSponsors(config, parsedData.data.pageInfo.endCursor, newResults);
+    if (data.pageInfo.hasNextPage) {
+        return getSponsors(config, data.pageInfo.endCursor, newResults);
     }
     return newResults;
 }
@@ -52976,6 +52964,114 @@ function getSponsorsExempt(config) {
         core.debug(`"${sponsorExemptFileLocation}" not found. Skipping..."`);
         return [];
     }
+}
+async function lockIssue(nodeId, config) {
+    const { githubWorkflowToken } = config;
+    const query = {
+        mutation: {
+            lockLockable: {
+                __args: {
+                    input: {
+                        lockableId: nodeId,
+                    },
+                },
+                lockedRecord: {
+                    locked: true,
+                },
+            },
+        },
+    };
+    const octokit = github.getOctokit(githubWorkflowToken);
+    await octokit.graphql((0,lib.jsonToGraphQLQuery)(query));
+}
+
+;// CONCATENATED MODULE: ./src/lib/action.ts
+
+
+
+
+
+async function issueCommentAction(payload, config, sponsors) {
+    if (lodash_default().isEmpty(payload)) {
+        core.setFailed('The payload for "issue_comment" is empty');
+        core.setOutput('result', false);
+        return;
+    }
+    const parsedPayload = issueCommentPayload.safeParse(payload);
+    if (!parsedPayload.success) {
+        core.setFailed('The payload for "issue_comment" is invalid');
+        core.setOutput('result', false);
+        return;
+    }
+    const { data } = parsedPayload;
+    if (data.action !== 'created'
+        && data.action !== 'edited') {
+        core.setFailed(`The "${data.action}" action is not supported`);
+        core.setOutput('result', false);
+        return;
+    }
+    console.log('issue_comment', external_node_util_default().inspect(data));
+    console.log('issue_comment', external_node_util_default().inspect(config));
+    console.log('issue_comment', external_node_util_default().inspect(sponsors));
+    core.setOutput('result', true);
+}
+async function issuesAction(payload, config, sponsors) {
+    if (lodash_default().isEmpty(payload)) {
+        core.setFailed('The payload for "issues" is empty');
+        core.setOutput('result', false);
+        return;
+    }
+    const parsedPayload = issuesPayload.safeParse(payload);
+    if (!parsedPayload.success) {
+        core.setFailed('The payload for "issues" is invalid');
+        core.setOutput('result', false);
+        return;
+    }
+    const { data } = parsedPayload;
+    const issueLabelNames = data.issue.labels.map((label) => label.name);
+    const sponsorsLogins = sponsors.map((sponsor) => sponsor.login);
+    if (data.action !== 'opened'
+        && data.action !== 'closed') {
+        core.setFailed(`The "${data.action}" action is not supported`);
+        core.setOutput('result', false);
+        return;
+    }
+    if (config.issueLabels.length !== 0
+        && !issueLabelNames.some((issueLabelName) => config.issueLabels.includes(issueLabelName))) {
+        core.info('Skipping action, issue does not have wanted labels');
+        core.setOutput('result', true);
+        return;
+    }
+    if (data.action === 'opened') {
+        if (data.issue.user === null) {
+            core.setFailed('The issue was opened, however the user information does not exist');
+            core.setOutput('result', false);
+            return;
+        }
+        const { login } = data.issue.user;
+        if (sponsorsLogins.includes(login)) {
+            await addIssueComment(data.issue.node_id, config.issueMessageWelcome, config);
+        }
+        else {
+            await addIssueComment(data.issue.node_id, config.issueMessageNotSponsor, config);
+            await closeIssue(data.issue.node_id, config);
+            await lockIssue(data.issue.node_id, config);
+        }
+    }
+    if (data.action === 'closed') {
+        if (!config.issueLockOnClose) {
+            core.setFailed('The issue was closed, however the "ISSUE_LOCK_ON_CLOSE" is set to "false"');
+            core.setOutput('result', false);
+            return;
+        }
+        if (data.issue.locked) {
+            core.info('Skipping action, issue is already locked');
+            core.setOutput('result', true);
+            return;
+        }
+        await lockIssue(data.issue.node_id, config);
+    }
+    core.setOutput('result', true);
 }
 
 ;// CONCATENATED MODULE: ./src/run.ts
@@ -53002,10 +53098,10 @@ async function runAction() {
         core.startGroup('Running');
         switch (context.eventName) {
             case 'issue_comment':
-                issueCommentAction(context.payload, config, sponsors);
+                await issueCommentAction(context.payload, config, sponsors);
                 break;
             case 'issues':
-                issuesAction(context.payload, config, sponsors);
+                await issuesAction(context.payload, config, sponsors);
                 break;
             default:
                 core.setFailed(`Unknown or unsupported event (${context.eventName})`);

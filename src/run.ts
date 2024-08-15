@@ -45,10 +45,10 @@ export async function runAction(): RunActionReturns {
 
     switch (context.eventName) {
       case 'issue_comment':
-        issueCommentAction(context.payload, config, sponsors);
+        await issueCommentAction(context.payload, config, sponsors);
         break;
       case 'issues':
-        issuesAction(context.payload, config, sponsors);
+        await issuesAction(context.payload, config, sponsors);
         break;
       default:
         core.setFailed(`Unknown or unsupported event (${context.eventName})`);

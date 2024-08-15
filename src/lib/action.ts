@@ -3,6 +3,7 @@ import _ from 'lodash';
 import util from 'node:util';
 
 import { issueCommentPayload, issuesPayload } from '@/lib/schema.js';
+import { addIssueComment, closeIssue, lockIssue } from '@/lib/utility.js';
 import type {
   IssueCommentActionConfig,
   IssueCommentActionPayload,
@@ -25,7 +26,7 @@ import type {
  *
  * @since 1.0.0
  */
-export function issueCommentAction(payload: IssueCommentActionPayload, config: IssueCommentActionConfig, sponsors: IssueCommentActionSponsors): IssueCommentActionReturns {
+export async function issueCommentAction(payload: IssueCommentActionPayload, config: IssueCommentActionConfig, sponsors: IssueCommentActionSponsors): IssueCommentActionReturns {
   if (_.isEmpty(payload)) {
     core.setFailed('The payload for "issue_comment" is empty');
     core.setOutput('result', false);
@@ -74,7 +75,7 @@ export function issueCommentAction(payload: IssueCommentActionPayload, config: I
  *
  * @since 1.0.0
  */
-export function issuesAction(payload: IssuesActionPayload, config: IssuesActionConfig, sponsors: IssuesActionSponsors): IssuesActionReturns {
+export async function issuesAction(payload: IssuesActionPayload, config: IssuesActionConfig, sponsors: IssuesActionSponsors): IssuesActionReturns {
   if (_.isEmpty(payload)) {
     core.setFailed('The payload for "issues" is empty');
     core.setOutput('result', false);
@@ -93,6 +94,8 @@ export function issuesAction(payload: IssuesActionPayload, config: IssuesActionC
   }
 
   const { data } = parsedPayload;
+  const issueLabelNames = data.issue.labels.map((label) => label.name);
+  const sponsorsLogins = sponsors.map((sponsor) => sponsor.login);
 
   // Check if the action is supported (so runner resources aren't wasted).
   if (
@@ -105,11 +108,12 @@ export function issuesAction(payload: IssuesActionPayload, config: IssuesActionC
     return;
   }
 
-  // Skip if the issue does not have supported labels.
+  // Skip if the issue does not have wanted labels.
   if (
     config.issueLabels.length !== 0
-    // TODO
+    && !issueLabelNames.some((issueLabelName) => config.issueLabels.includes(issueLabelName))
   ) {
+    core.info('Skipping action, issue does not have wanted labels');
     core.setOutput('result', true);
 
     return;
@@ -127,14 +131,19 @@ export function issuesAction(payload: IssuesActionPayload, config: IssuesActionC
 
     const { login } = data.issue.user;
 
-    if (sponsors.map((sponsor) => sponsor.login).includes(login)) {
-      // TODO
+    // If user creating the issue is not in the sponsor list.
+    if (sponsorsLogins.includes(login)) {
+      await addIssueComment(data.issue.node_id, config.issueMessageWelcome, config);
+    } else {
+      await addIssueComment(data.issue.node_id, config.issueMessageNotSponsor, config);
+      await closeIssue(data.issue.node_id, config);
+      await lockIssue(data.issue.node_id, config);
     }
   }
 
   // If issue is closed.
   if (data.action === 'closed') {
-    // Check for correct configuration (so runner resources aren't wasted).
+    // Check for the correct configuration (so runner resources aren't wasted).
     if (!config.issueLockOnClose) {
       core.setFailed('The issue was closed, however the "ISSUE_LOCK_ON_CLOSE" is set to "false"');
       core.setOutput('result', false);
@@ -142,10 +151,17 @@ export function issuesAction(payload: IssuesActionPayload, config: IssuesActionC
       return;
     }
 
-    // TODO lock the issue
-  }
+    // Skip if the issue is already locked.
+    if (data.issue.locked) {
+      core.info('Skipping action, issue is already locked');
+      core.setOutput('result', true);
 
-  console.log('issues', util.inspect(data)); // TODO
+      return;
+    }
+
+    // Lock the issue.
+    await lockIssue(data.issue.node_id, config);
+  }
 
   core.setOutput('result', true);
 }

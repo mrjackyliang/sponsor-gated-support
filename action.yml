@@ -7,8 +7,12 @@ branding:
   color: "orange"
 
 inputs:
-  GITHUB_TOKEN:
-    description: "Personal access token from GitHub to fetch your sponsors"
+  GITHUB_PERSONAL_ACCESS_TOKEN:
+    description: "Personal access token from GitHub used to fetch your sponsors"
+    required: true
+    default: ""
+  GITHUB_WORKFLOW_TOKEN:
+    description: "Workflow token from GitHub used to perform issue and issue comment moderation"
     required: true
     default: ""
   ISSUE_LABELS:
@@ -16,27 +20,35 @@ inputs:
     required: false
     default: "support"
   ISSUE_LIMIT_COMMENTER:
-    description: "Prevent users other than the sponsor (that opened the issue) and contributor from commenting on the issue"
+    description: "Allow only the sponsoring user (that opened the issue) and contributor to comment on issues"
     required: false
     default: "true"
   ISSUE_LOCK_ON_CLOSE:
     description: "Lock issues as soon as they become closed"
     required: false
     default: "true"
+  ISSUE_MESSAGE_NOT_SPONSOR:
+    description: "Message to send when a non-sponsoring user opens an issue"
+    required: false
+    default: "Apologies! Only sponsoring users are allowed to open issues. Please sponsor the owner of this repository, then try again."
+  ISSUE_MESSAGE_WELCOME:
+    description: "Message to send when a sponsoring user opens an issue"
+    required: false
+    default: "Thank you for your support! We appreciate your sponsorship and are here to help. We'll review your issue and get back to you as soon as possible.\n\nPlease note that this issue is protected and only you + the contributors can comment on this thread. All other comments will be deleted automatically."
   IS_ORGANIZATION:
-    description: "If this workflow is being used on an organization-owned repository, this should be set to true"
+    description: "If this workflow is being used on an organization-owned repository"
     required: false
     default: "false"
   SPONSOR_ACTIVE_ONLY:
-    description: "Allow only users on GitHub that are currently sponsoring you to open issues"
+    description: "Allow only active sponsoring users to open issues"
     required: false
     default: "true"
   SPONSOR_EXEMPT_FILE_LOCATION:
-    description: "A list of users on GitHub that are exempt from requiring to sponsor you to open issues"
+    description: "A list of users that are exempt from sponsorship requirement"
     required: false
     default: "./SPONSOR_EXEMPT"
   SPONSOR_MINIMUM:
-    description: "Set a minimum sponsorship threshold (in cents) to allow only sponsors that reach this amount the ability to open issues"
+    description: "Allow only sponsoring users that reach this minimum amount (in cents) to open issues"
     required: false
     default: "0"
 

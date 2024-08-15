@@ -7,6 +7,13 @@ import path from 'node:path';
 
 import { configuration, sponsorshipsAsMaintainer } from '@/lib/schema.js';
 import type {
+  AddIssueCommentBody,
+  AddIssueCommentConfig,
+  AddIssueCommentNodeId,
+  AddIssueCommentReturns,
+  CloseIssueConfig,
+  CloseIssueNodeId,
+  CloseIssueReturns,
   GetConfigReturns,
   GetContextReturns,
   GetSponsorsConfig,
@@ -15,7 +22,80 @@ import type {
   GetSponsorsExemptReturns,
   GetSponsorsResults,
   GetSponsorsReturns,
+  LockIssueConfig,
+  LockIssueNodeId,
+  LockIssueReturns,
 } from '@/types/index.d.ts';
+
+/**
+ * Add issue comment.
+ *
+ * @param {AddIssueCommentNodeId}  nodeId - Node id.
+ * @param {AddIssueCommentBody}    body   - Body.
+ * @param {AddIssueCommentConfig}  config - Config.
+ *
+ * @returns {AddIssueCommentReturns}
+ *
+ * @since 1.0.0
+ */
+export async function addIssueComment(nodeId: AddIssueCommentNodeId, body: AddIssueCommentBody, config: AddIssueCommentConfig): AddIssueCommentReturns {
+  const { githubWorkflowToken } = config;
+
+  // GraphQL query.
+  const query = {
+    mutation: {
+      addComment: {
+        __args: {
+          input: {
+            subjectId: nodeId,
+            body,
+          },
+        },
+        subject: {
+          id: true,
+        },
+      },
+    },
+  };
+
+  const octokit = github.getOctokit(githubWorkflowToken);
+
+  await octokit.graphql(jsonToGraphQLQuery(query));
+}
+
+/**
+ * Close issue.
+ *
+ * @param {CloseIssueNodeId}  nodeId - Node id.
+ * @param {CloseIssueConfig}  config - Config.
+ *
+ * @returns {CloseIssueReturns}
+ *
+ * @since 1.0.0
+ */
+export async function closeIssue(nodeId: CloseIssueNodeId, config: CloseIssueConfig): CloseIssueReturns {
+  const { githubWorkflowToken } = config;
+
+  // GraphQL query.
+  const query = {
+    mutation: {
+      closeIssue: {
+        __args: {
+          input: {
+            issueId: nodeId,
+          },
+        },
+        issue: {
+          id: true,
+        },
+      },
+    },
+  };
+
+  const octokit = github.getOctokit(githubWorkflowToken);
+
+  await octokit.graphql(jsonToGraphQLQuery(query));
+}
 
 /**
  * Get config.
@@ -25,20 +105,26 @@ import type {
  * @since 1.0.0
  */
 export function getConfig(): GetConfigReturns {
-  const githubToken = core.getInput('GITHUB_TOKEN');
+  const githubPersonalAccessToken = core.getInput('GITHUB_PERSONAL_ACCESS_TOKEN');
+  const githubWorkflowToken = core.getInput('GITHUB_WORKFLOW_TOKEN');
   const issueLabels = core.getInput('ISSUE_LABELS');
   const issueLimitCommenter = core.getInput('ISSUE_LIMIT_COMMENTER');
   const issueLockOnClose = core.getInput('ISSUE_LOCK_ON_CLOSE');
+  const issueMessageNotSponsor = core.getInput('ISSUE_MESSAGE_NOT_SPONSOR');
+  const issueMessageWelcome = core.getInput('ISSUE_MESSAGE_WELCOME');
   const isOrganization = core.getInput('IS_ORGANIZATION');
   const sponsorActiveOnly = core.getInput('SPONSOR_ACTIVE_ONLY');
   const sponsorExemptFileLocation = core.getInput('SPONSOR_EXEMPT_FILE_LOCATION');
   const sponsorMinimum = core.getInput('SPONSOR_MINIMUM');
 
   return configuration.parse({
-    githubToken,
+    githubPersonalAccessToken,
+    githubWorkflowToken,
     issueLabels,
     issueLimitCommenter,
     issueLockOnClose,
+    issueMessageNotSponsor,
+    issueMessageWelcome,
     isOrganization,
     sponsorActiveOnly,
     sponsorExemptFileLocation,
@@ -70,7 +156,7 @@ export function getContext(): GetContextReturns {
  */
 export async function getSponsors(config: GetSponsorsConfig, cursor: GetSponsorsCursor = null, results: GetSponsorsResults = []): GetSponsorsReturns {
   const {
-    githubToken,
+    githubPersonalAccessToken,
     isOrganization,
     sponsorActiveOnly,
     sponsorMinimum,
@@ -127,19 +213,21 @@ export async function getSponsors(config: GetSponsorsConfig, cursor: GetSponsors
   };
 
   // Execute the GraphQL query.
-  const octokit = github.getOctokit(githubToken);
+  const octokit = github.getOctokit(githubPersonalAccessToken);
   const octokitResponse = await octokit.graphql(jsonToGraphQLQuery(query));
   const octokitResponsePath = (isOrganization) ? ['organization', 'sponsorshipsAsMaintainer'] : ['viewer', 'sponsorshipsAsMaintainer'];
-  const data = _.get(octokitResponse, octokitResponsePath, {});
-  const parsedData = sponsorshipsAsMaintainer.safeParse(data);
+  const sponsorships = _.get(octokitResponse, octokitResponsePath, {});
+  const parsedSponsorships = sponsorshipsAsMaintainer.safeParse(sponsorships);
 
-  // Stop if parsed data is not valid.
-  if (!parsedData.success) {
+  // Stop if parsed sponsorships is not valid.
+  if (!parsedSponsorships.success) {
     return results;
   }
 
+  const { data } = parsedSponsorships;
+
   // Accumulate results.
-  const newResults = [...results, ...parsedData.data.nodes.map((node) => {
+  const newResults = [...results, ...data.nodes.map((node) => {
     const nodeSponsorEntityLogin = node.sponsorEntity?.login;
     const nodeTierMonthlyPriceInCents = node.tier?.monthlyPriceInCents;
 
@@ -164,10 +252,10 @@ export async function getSponsors(config: GetSponsorsConfig, cursor: GetSponsors
   }).filter((node) => node !== null)];
 
   // Check if there are more pages.
-  if (parsedData.data.pageInfo.hasNextPage) {
+  if (data.pageInfo.hasNextPage) {
     return getSponsors(
       config,
-      parsedData.data.pageInfo.endCursor,
+      data.pageInfo.endCursor,
       newResults,
     );
   }
@@ -201,4 +289,38 @@ export function getSponsorsExempt(config: GetSponsorsExemptConfig): GetSponsorsE
 
     return [];
   }
+}
+
+/**
+ * Lock issue.
+ *
+ * @param {LockIssueNodeId}  nodeId - Node id.
+ * @param {LockIssueConfig}  config - Config.
+ *
+ * @returns {LockIssueReturns}
+ *
+ * @since 1.0.0
+ */
+export async function lockIssue(nodeId: LockIssueNodeId, config: LockIssueConfig): LockIssueReturns {
+  const { githubWorkflowToken } = config;
+
+  // GraphQL query.
+  const query = {
+    mutation: {
+      lockLockable: {
+        __args: {
+          input: {
+            lockableId: nodeId,
+          },
+        },
+        lockedRecord: {
+          locked: true,
+        },
+      },
+    },
+  };
+
+  const octokit = github.getOctokit(githubWorkflowToken);
+
+  await octokit.graphql(jsonToGraphQLQuery(query));
 }

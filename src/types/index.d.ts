@@ -5,6 +5,30 @@ import type { configuration } from '@/lib/schema.js';
 import type { Sponsor } from '@/types/shared.js';
 
 /**
+ * Add issue comment.
+ *
+ * @since 1.0.0
+ */
+export type AddIssueCommentNodeId = string;
+
+export type AddIssueCommentBody = string;
+
+export type AddIssueCommentConfig = z.infer<typeof configuration>;
+
+export type AddIssueCommentReturns = Promise<void>;
+
+/**
+ * Close issue.
+ *
+ * @since 1.0.0
+ */
+export type CloseIssueNodeId = string;
+
+export type CloseIssueConfig = z.infer<typeof configuration>;
+
+export type CloseIssueReturns = Promise<void>;
+
+/**
  * Get config.
  *
  * @since 1.0.0
@@ -51,7 +75,7 @@ export type IssueCommentActionConfig = z.infer<typeof configuration>;
 
 export type IssueCommentActionSponsors = Sponsor[];
 
-export type IssueCommentActionReturns = void;
+export type IssueCommentActionReturns = Promise<void>;
 
 /**
  * Issues action.
@@ -64,7 +88,18 @@ export type IssuesActionConfig = z.infer<typeof configuration>;
 
 export type IssuesActionSponsors = Sponsor[];
 
-export type IssuesActionReturns = void;
+export type IssuesActionReturns = Promise<void>;
+
+/**
+ * Lock issue.
+ *
+ * @since 1.0.0
+ */
+export type LockIssueNodeId = string;
+
+export type LockIssueConfig = z.infer<typeof configuration>;
+
+export type LockIssueReturns = Promise<void>;
 
 /**
  * Run action.

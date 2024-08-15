@@ -6,7 +6,9 @@ import { z } from 'zod';
  * @since 1.0.0
  */
 export const configuration = z.object({
-  githubToken: z.string()
+  githubPersonalAccessToken: z.string()
+    .startsWith('ghp_'),
+  githubWorkflowToken: z.string()
     .startsWith('ghp_'),
   issueLabels: z.string()
     .transform((value) => value.split(',')),
@@ -14,6 +16,8 @@ export const configuration = z.object({
     .transform((value) => value === 'true'),
   issueLockOnClose: z.enum(['true', 'false'])
     .transform((value) => value === 'true'),
+  issueMessageNotSponsor: z.string(),
+  issueMessageWelcome: z.string(),
   isOrganization: z.enum(['true', 'false'])
     .transform((value) => value === 'true'),
   sponsorActiveOnly: z.enum(['true', 'false'])
@@ -87,6 +91,17 @@ export const issuesPayload = z.object({
       z.literal('NONE'),
       z.literal('OWNER'),
     ]),
+    labels: z.array(z.object({
+      color: z.string(),
+      default: z.boolean(),
+      description: z.string().nullable(),
+      id: z.number(),
+      name: z.string(),
+      node_id: z.string(),
+      url: z.string(),
+    })),
+    locked: z.boolean(),
+    node_id: z.string(),
     user: z.object({
       login: z.string(),
     }).nullable(),
