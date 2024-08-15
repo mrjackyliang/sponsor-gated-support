@@ -53038,6 +53038,7 @@ async function issuesAction(payload, config, sponsors) {
         return;
     }
     if (data.action === 'opened') {
+        core.info('Running tasks for when an issue is open');
         if (data.issue.user === null) {
             core.setFailed('The issue was opened, however the user information does not exist');
             core.setOutput('result', false);
@@ -53046,15 +53047,20 @@ async function issuesAction(payload, config, sponsors) {
         const { login } = data.issue.user;
         if (sponsorsLogins.includes(login)
             || data.issue.author_association === 'OWNER') {
+            core.info('Adding issue comment based on "ISSUE_MESSAGE_WELCOME"');
             await addIssueComment(data.issue.node_id, config.issueMessageWelcome, config);
         }
         else {
+            core.info('Adding issue comment based on "ISSUE_MESSAGE_NOT_SPONSOR"');
             await addIssueComment(data.issue.node_id, config.issueMessageNotSponsor, config);
+            core.info('Closing issue');
             await closeIssue(data.issue.node_id, config);
+            core.info('Locking issue');
             await lockIssue(data.issue.node_id, config);
         }
     }
     if (data.action === 'closed') {
+        core.info('Running tasks for when an issue is closed');
         if (!config.issueLockOnClose) {
             core.setFailed('The issue was closed, however the "ISSUE_LOCK_ON_CLOSE" is set to "false"');
             core.setOutput('result', false);
@@ -53065,6 +53071,7 @@ async function issuesAction(payload, config, sponsors) {
             core.setOutput('result', true);
             return;
         }
+        core.info('Locking issue');
         await lockIssue(data.issue.node_id, config);
     }
     core.setOutput('result', true);
