@@ -16,7 +16,7 @@ inputs:
     required: true
     default: ""
   ISSUE_LABELS:
-    description: "Only set limits on issues with these labels"
+    description: "Only set limits on issues with these labels (comma de-limited list)"
     required: false
     default: "support"
   ISSUE_LIMIT_COMMENTER:
