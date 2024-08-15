@@ -29,6 +29,17 @@ export type CloseIssueConfig = z.infer<typeof configuration>;
 export type CloseIssueReturns = Promise<void>;
 
 /**
+ * Delete issue comment.
+ *
+ * @since 1.0.0
+ */
+export type DeleteIssueCommentNodeId = string;
+
+export type DeleteIssueCommentConfig = z.infer<typeof configuration>;
+
+export type DeleteIssueCommentReturns = Promise<void>;
+
+/**
  * Get config.
  *
  * @since 1.0.0
@@ -72,8 +83,6 @@ export type GetSponsorsExemptReturns = Sponsor[];
 export type IssueCommentActionPayload = object;
 
 export type IssueCommentActionConfig = z.infer<typeof configuration>;
-
-export type IssueCommentActionSponsors = Sponsor[];
 
 export type IssueCommentActionReturns = Promise<void>;
 

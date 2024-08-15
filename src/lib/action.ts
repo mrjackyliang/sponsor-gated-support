@@ -1,14 +1,17 @@
 import * as core from '@actions/core';
 import _ from 'lodash';
-import util from 'node:util';
 
 import { issueCommentPayload, issuesPayload } from '@/lib/schema.js';
-import { addIssueComment, closeIssue, lockIssue } from '@/lib/utility.js';
+import {
+  addIssueComment,
+  closeIssue,
+  deleteIssueComment,
+  lockIssue,
+} from '@/lib/utility.js';
 import type {
   IssueCommentActionConfig,
   IssueCommentActionPayload,
   IssueCommentActionReturns,
-  IssueCommentActionSponsors,
   IssuesActionConfig,
   IssuesActionPayload,
   IssuesActionReturns,
@@ -18,15 +21,14 @@ import type {
 /**
  * Issue comment action.
  *
- * @param {IssueCommentActionPayload}  payload  - Payload.
- * @param {IssueCommentActionConfig}   config   - Config.
- * @param {IssueCommentActionSponsors} sponsors - Sponsors.
+ * @param {IssueCommentActionPayload}  payload - Payload.
+ * @param {IssueCommentActionConfig}   config  - Config.
  *
  * @returns {IssueCommentActionReturns}
  *
  * @since 1.0.0
  */
-export async function issueCommentAction(payload: IssueCommentActionPayload, config: IssueCommentActionConfig, sponsors: IssueCommentActionSponsors): IssueCommentActionReturns {
+export async function issueCommentAction(payload: IssueCommentActionPayload, config: IssueCommentActionConfig): IssueCommentActionReturns {
   if (_.isEmpty(payload)) {
     core.setFailed('The payload for "issue_comment" is empty');
     core.setOutput('result', false);
@@ -45,6 +47,7 @@ export async function issueCommentAction(payload: IssueCommentActionPayload, con
   }
 
   const { data } = parsedPayload;
+  const issueLabelNames = data.issue.labels.map((label) => label.name);
 
   // Check if the action is supported (so runner resources aren't wasted).
   if (
@@ -57,9 +60,52 @@ export async function issueCommentAction(payload: IssueCommentActionPayload, con
     return;
   }
 
-  console.log('issue_comment', util.inspect(data)); // TODO
-  console.log('issue_comment', util.inspect(config)); // TODO
-  console.log('issue_comment', util.inspect(sponsors)); // TODO
+  core.info(`Running tasks for when an issue comment is ${data.action}`);
+
+  // Check for the correct configuration (so runner resources aren't wasted).
+  if (!config.issueLimitCommenter) {
+    core.setFailed('An issue comment was created or edited, however the "ISSUE_LIMIT_COMMENTER" setting is set to "false"');
+    core.setOutput('result', false);
+
+    return;
+  }
+
+  // Skip if the issue does not have wanted labels.
+  if (
+    config.issueLabels.length !== 0
+    && !issueLabelNames.some((issueLabelName) => config.issueLabels.includes(issueLabelName))
+  ) {
+    core.info('Skipping "issue_comment" action, issue does not have wanted labels');
+    core.setOutput('result', true);
+
+    return;
+  }
+
+  // Check if the user exists for the issue.
+  if (
+    data.comment.user === null
+    || data.issue.user === null
+  ) {
+    core.setFailed('An issue comment was created or edited, however the comment and/or issue user information does not exist');
+    core.setOutput('result', false);
+
+    return;
+  }
+
+  // Skip if comment ownership is the issue creator or owner.
+  if (
+    data.comment.user.login === data.issue.user.login
+    || data.comment.author_association === 'OWNER'
+  ) {
+    core.info('Skipping "issue_comment" action, issue comment is made by either issue creator or owner');
+    core.setOutput('result', true);
+
+    return;
+  }
+
+  // Delete the comment.
+  core.info('Deleting issue comment');
+  await deleteIssueComment(data.comment.node_id, config);
 
   core.setOutput('result', true);
 }
@@ -113,7 +159,7 @@ export async function issuesAction(payload: IssuesActionPayload, config: IssuesA
     config.issueLabels.length !== 0
     && !issueLabelNames.some((issueLabelName) => config.issueLabels.includes(issueLabelName))
   ) {
-    core.info('Skipping action, issue does not have wanted labels');
+    core.info('Skipping "issues" action, issue does not have wanted labels');
     core.setOutput('result', true);
 
     return;
@@ -158,7 +204,7 @@ export async function issuesAction(payload: IssuesActionPayload, config: IssuesA
 
     // Check for the correct configuration (so runner resources aren't wasted).
     if (!config.issueLockOnClose) {
-      core.setFailed('The issue was closed, however the "ISSUE_LOCK_ON_CLOSE" is set to "false"');
+      core.setFailed('The issue was closed, however the "ISSUE_LOCK_ON_CLOSE" setting is set to "false"');
       core.setOutput('result', false);
 
       return;
@@ -166,7 +212,7 @@ export async function issuesAction(payload: IssuesActionPayload, config: IssuesA
 
     // Skip if the issue is already locked.
     if (data.issue.locked) {
-      core.info('Skipping action, issue is already locked');
+      core.info('Skipping "issues" action, issue is already locked');
       core.setOutput('result', true);
 
       return;

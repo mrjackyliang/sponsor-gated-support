@@ -14,6 +14,9 @@ import type {
   CloseIssueConfig,
   CloseIssueNodeId,
   CloseIssueReturns,
+  DeleteIssueCommentConfig,
+  DeleteIssueCommentNodeId,
+  DeleteIssueCommentReturns,
   GetConfigReturns,
   GetContextReturns,
   GetSponsorsConfig,
@@ -58,8 +61,8 @@ export async function addIssueComment(nodeId: AddIssueCommentNodeId, body: AddIs
     },
   };
 
+  // Execute the GraphQL query.
   const octokit = github.getOctokit(githubWorkflowToken);
-
   await octokit.graphql(jsonToGraphQLQuery(query));
 }
 
@@ -92,8 +95,40 @@ export async function closeIssue(nodeId: CloseIssueNodeId, config: CloseIssueCon
     },
   };
 
+  // Execute the GraphQL query.
   const octokit = github.getOctokit(githubWorkflowToken);
+  await octokit.graphql(jsonToGraphQLQuery(query));
+}
 
+/**
+ * Delete issue comment.
+ *
+ * @param {DeleteIssueCommentNodeId}  nodeId - Node id.
+ * @param {DeleteIssueCommentConfig}  config - Config.
+ *
+ * @returns {DeleteIssueCommentReturns}
+ *
+ * @since 1.0.0
+ */
+export async function deleteIssueComment(nodeId: DeleteIssueCommentNodeId, config: DeleteIssueCommentConfig): DeleteIssueCommentReturns {
+  const { githubWorkflowToken } = config;
+
+  // GraphQL query.
+  const query = {
+    mutation: {
+      deleteIssueComment: {
+        __args: {
+          input: {
+            id: nodeId,
+          },
+        },
+        clientMutationId: true,
+      },
+    },
+  };
+
+  // Execute the GraphQL query.
+  const octokit = github.getOctokit(githubWorkflowToken);
   await octokit.graphql(jsonToGraphQLQuery(query));
 }
 
@@ -221,7 +256,7 @@ export async function getSponsors(config: GetSponsorsConfig, cursor: GetSponsors
 
   // Stop if parsed sponsorships is not valid.
   if (!parsedSponsorships.success) {
-    return results;
+    throw new Error('There was an error retrieving sponsorships');
   }
 
   const { data } = parsedSponsorships;
@@ -231,7 +266,7 @@ export async function getSponsors(config: GetSponsorsConfig, cursor: GetSponsors
     const nodeSponsorEntityLogin = node.sponsorEntity?.login;
     const nodeTierMonthlyPriceInCents = node.tier?.monthlyPriceInCents;
 
-    // Login username is required to match issue opener/commenter.
+    // Login username is required to match issue opener and commenter.
     if (
       nodeSponsorEntityLogin === undefined
       || nodeTierMonthlyPriceInCents === undefined
@@ -239,7 +274,7 @@ export async function getSponsors(config: GetSponsorsConfig, cursor: GetSponsors
       return null;
     }
 
-    // Skip sponsors that do not meet the minimum requirement.
+    // Skip sponsors that do not meet the minimum sponsorship amount.
     if (nodeTierMonthlyPriceInCents < sponsorMinimum) {
       return null;
     }
@@ -320,7 +355,7 @@ export async function lockIssue(nodeId: LockIssueNodeId, config: LockIssueConfig
     },
   };
 
+  // Execute the GraphQL query.
   const octokit = github.getOctokit(githubWorkflowToken);
-
   await octokit.graphql(jsonToGraphQLQuery(query));
 }

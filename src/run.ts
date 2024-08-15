@@ -40,12 +40,12 @@ export async function runAction(): RunActionReturns {
     core.info(util.inspect(sponsors, false, null, true));
     core.endGroup();
 
-    // Determine the context and run the appropriate action.
+    // Run the appropriate action based on context event.
     core.startGroup('Running');
 
     switch (context.eventName) {
       case 'issue_comment':
-        await issueCommentAction(context.payload, config, sponsors);
+        await issueCommentAction(context.payload, config);
         break;
       case 'issues':
         await issuesAction(context.payload, config, sponsors);

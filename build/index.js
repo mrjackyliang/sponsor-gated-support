@@ -52714,6 +52714,21 @@ const issueCommentPayload = z.object({
             z.literal('NONE'),
             z.literal('OWNER'),
         ]),
+        node_id: z.string(),
+        user: z.object({
+            login: z.string(),
+        }).nullable(),
+    }),
+    issue: z.object({
+        labels: z.array(z.object({
+            color: z.string(),
+            default: z.boolean(),
+            description: z.string().nullable(),
+            id: z.number(),
+            name: z.string(),
+            node_id: z.string(),
+            url: z.string(),
+        })),
         user: z.object({
             login: z.string(),
         }).nullable(),
@@ -52838,6 +52853,23 @@ async function closeIssue(nodeId, config) {
     const octokit = github.getOctokit(githubWorkflowToken);
     await octokit.graphql((0,lib.jsonToGraphQLQuery)(query));
 }
+async function deleteIssueComment(nodeId, config) {
+    const { githubWorkflowToken } = config;
+    const query = {
+        mutation: {
+            deleteIssueComment: {
+                __args: {
+                    input: {
+                        id: nodeId,
+                    },
+                },
+                clientMutationId: true,
+            },
+        },
+    };
+    const octokit = github.getOctokit(githubWorkflowToken);
+    await octokit.graphql((0,lib.jsonToGraphQLQuery)(query));
+}
 function getConfig() {
     const githubPersonalAccessToken = core.getInput('GITHUB_PERSONAL_ACCESS_TOKEN');
     const githubWorkflowToken = core.getInput('GITHUB_WORKFLOW_TOKEN');
@@ -52920,7 +52952,7 @@ async function getSponsors(config, cursor = null, results = []) {
     const sponsorships = lodash_default().get(octokitResponse, octokitResponsePath, {});
     const parsedSponsorships = sponsorshipsAsMaintainer.safeParse(sponsorships);
     if (!parsedSponsorships.success) {
-        return results;
+        throw new Error('There was an error retrieving sponsorships');
     }
     const { data } = parsedSponsorships;
     const newResults = [...results, ...data.nodes.map((node) => {
@@ -52985,8 +53017,7 @@ async function lockIssue(nodeId, config) {
 
 
 
-
-async function issueCommentAction(payload, config, sponsors) {
+async function issueCommentAction(payload, config) {
     if (lodash_default().isEmpty(payload)) {
         core.setFailed('The payload for "issue_comment" is empty');
         core.setOutput('result', false);
@@ -52999,15 +53030,39 @@ async function issueCommentAction(payload, config, sponsors) {
         return;
     }
     const { data } = parsedPayload;
+    const issueLabelNames = data.issue.labels.map((label) => label.name);
     if (data.action !== 'created'
         && data.action !== 'edited') {
         core.setFailed(`The "${data.action}" action is not supported`);
         core.setOutput('result', false);
         return;
     }
-    console.log('issue_comment', external_node_util_default().inspect(data));
-    console.log('issue_comment', external_node_util_default().inspect(config));
-    console.log('issue_comment', external_node_util_default().inspect(sponsors));
+    core.info(`Running tasks for when an issue comment is ${data.action}`);
+    if (!config.issueLimitCommenter) {
+        core.setFailed('An issue comment was created or edited, however the "ISSUE_LIMIT_COMMENTER" setting is set to "false"');
+        core.setOutput('result', false);
+        return;
+    }
+    if (config.issueLabels.length !== 0
+        && !issueLabelNames.some((issueLabelName) => config.issueLabels.includes(issueLabelName))) {
+        core.info('Skipping "issue_comment" action, issue does not have wanted labels');
+        core.setOutput('result', true);
+        return;
+    }
+    if (data.comment.user === null
+        || data.issue.user === null) {
+        core.setFailed('An issue comment was created or edited, however the comment and/or issue user information does not exist');
+        core.setOutput('result', false);
+        return;
+    }
+    if (data.comment.user.login === data.issue.user.login
+        || data.comment.author_association === 'OWNER') {
+        core.info('Skipping "issue_comment" action, issue comment is made by either issue creator or owner');
+        core.setOutput('result', true);
+        return;
+    }
+    core.info('Deleting issue comment');
+    await deleteIssueComment(data.comment.node_id, config);
     core.setOutput('result', true);
 }
 async function issuesAction(payload, config, sponsors) {
@@ -53033,7 +53088,7 @@ async function issuesAction(payload, config, sponsors) {
     }
     if (config.issueLabels.length !== 0
         && !issueLabelNames.some((issueLabelName) => config.issueLabels.includes(issueLabelName))) {
-        core.info('Skipping action, issue does not have wanted labels');
+        core.info('Skipping "issues" action, issue does not have wanted labels');
         core.setOutput('result', true);
         return;
     }
@@ -53062,12 +53117,12 @@ async function issuesAction(payload, config, sponsors) {
     if (data.action === 'closed') {
         core.info('Running tasks for when an issue is closed');
         if (!config.issueLockOnClose) {
-            core.setFailed('The issue was closed, however the "ISSUE_LOCK_ON_CLOSE" is set to "false"');
+            core.setFailed('The issue was closed, however the "ISSUE_LOCK_ON_CLOSE" setting is set to "false"');
             core.setOutput('result', false);
             return;
         }
         if (data.issue.locked) {
-            core.info('Skipping action, issue is already locked');
+            core.info('Skipping "issues" action, issue is already locked');
             core.setOutput('result', true);
             return;
         }
@@ -53101,7 +53156,7 @@ async function runAction() {
         core.startGroup('Running');
         switch (context.eventName) {
             case 'issue_comment':
-                await issueCommentAction(context.payload, config, sponsors);
+                await issueCommentAction(context.payload, config);
                 break;
             case 'issues':
                 await issuesAction(context.payload, config, sponsors);

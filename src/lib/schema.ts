@@ -50,6 +50,21 @@ export const issueCommentPayload = z.object({
       z.literal('NONE'),
       z.literal('OWNER'),
     ]),
+    node_id: z.string(),
+    user: z.object({
+      login: z.string(),
+    }).nullable(),
+  }),
+  issue: z.object({
+    labels: z.array(z.object({
+      color: z.string(),
+      default: z.boolean(),
+      description: z.string().nullable(),
+      id: z.number(),
+      name: z.string(),
+      node_id: z.string(),
+      url: z.string(),
+    })),
     user: z.object({
       login: z.string(),
     }).nullable(),
