@@ -6,9 +6,9 @@
   "main": "./build/index.js",
   "exports": "./build/index.js",
   "type": "module",
-  "private": false,
+  "private": true,
   "scripts": {
-    "run": "local-action run . src/index.ts .env",
+    "start": "local-action run . src/index.ts .env",
     "build": "npm-run-all --sequential build:*",
     "build:reset": "rimraf ./build",
     "build:lint": "npx eslint ./src",
@@ -34,7 +34,7 @@
   "keywords": [
     "actions",
     "github-sponsors",
-    "github-sponsor-action",
+    "github-sponsors-action",
     "patreon",
     "customer-service"
   ],
