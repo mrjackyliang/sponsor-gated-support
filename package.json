@@ -13,8 +13,7 @@
     "build:reset": "rimraf ./build",
     "build:lint": "npx eslint ./src",
     "build:ncc": "npx ncc build src/index.ts -o build --source-map --license licenses.txt",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm run build"
+    "prepare": "npm run build"
   },
   "types": "",
   "repository": {
