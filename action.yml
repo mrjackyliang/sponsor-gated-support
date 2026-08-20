@@ -16,11 +16,11 @@ inputs:
     required: true
     default: ""
   ISSUE_LABELS:
-    description: "Only set limits on issues with these labels (comma de-limited list)"
+    description: "Only set limits on issues with these labels (comma-delimited list)"
     required: false
     default: "support"
   ISSUE_LIMIT_COMMENTER:
-    description: "Allow only the sponsoring user (that opened the issue) and contributor to comment on issues"
+    description: "Allow only the issue opener, members, owners, contributors, and collaborators to comment on issues"
     required: false
     default: "true"
   ISSUE_LOCK_ON_CLOSE:
@@ -44,7 +44,7 @@ inputs:
     required: false
     default: "true"
   SPONSOR_EXEMPT_FILE_LOCATION:
-    description: "A list of users that are exempt from sponsorship requirement"
+    description: "Path to a file containing a list of users who are exempt from the sponsorship requirement"
     required: false
     default: "./SPONSOR_EXEMPT"
   SPONSOR_MINIMUM:
@@ -58,4 +58,4 @@ outputs:
 
 runs:
   using: "node20"
-  main: "./build/index.js"
+  main: "./packages/sponsor-gated-support/build/index.js"

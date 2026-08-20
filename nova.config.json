@@ -1,0 +1,398 @@
+{
+  "project": {
+    "name": {
+      "title": "Sponsor Gated Support",
+      "slug": "sponsor-gated-support"
+    },
+    "description": {
+      "short": "A GitHub Action that reserves issue support for sponsors and recognized contributors who back your work",
+      "long": "GitHub Action that keeps labeled support issues for the people who back your work. When a non-sponsor opens one, it replies, closes, and locks it; sponsors get a welcome instead. Eligibility comes from live GitHub Sponsors data, contributor status, or an exempt list, with a minimum sponsorship amount and an active-only check. Only the labels you list are gated; the default is a single support label."
+    },
+    "keywords": [
+      "actions",
+      "github-sponsors",
+      "github-sponsors-action",
+      "patreon",
+      "customer-service"
+    ],
+    "legalName": "Jacky Liang",
+    "pronouns": "personal",
+    "platforms": [
+      "nodejs"
+    ],
+    "startingYear": 2024,
+    "license": "MIT"
+  },
+  "entities": [
+    {
+      "name": "Jacky Liang",
+      "email": "hello@mrjackyliang.com",
+      "url": "https://www.mrjackyliang.com",
+      "roles": [
+        "author"
+      ]
+    }
+  ],
+  "emails": {
+    "bugs": "bugs@mrjackyliang.com"
+  },
+  "github": {
+    "owner": "mrjackyliang",
+    "repo": "sponsor-gated-support",
+    "features": {
+      "issues": true,
+      "wiki": false,
+      "projects": false,
+      "discussions": false
+    },
+    "policies": {
+      "visibility": "public",
+      "defaultBranch": "main",
+      "mergeMethods": {
+        "merge": true,
+        "squash": true,
+        "rebase": true
+      },
+      "autoDeleteHeadBranch": true
+    }
+  },
+  "workflows": [
+    {
+      "template": "check-sponsor-gated-issues",
+      "name": "sponsor-check",
+      "triggers": [
+        "issue-comment",
+        "issues"
+      ]
+    },
+    {
+      "template": "lock-inactive-issues",
+      "name": "lock-inactive",
+      "triggers": [
+        "schedule-weekly"
+      ]
+    },
+    {
+      "template": "publish",
+      "name": "project",
+      "triggers": [
+        "release"
+      ],
+      "build": [
+        "./packages/sponsor-gated-support",
+        "./apps/docs"
+      ],
+      "deploy": [
+        {
+          "to": "github-action",
+          "path": "./packages/sponsor-gated-support"
+        },
+        {
+          "to": "github-pages-docusaurus",
+          "path": "./apps/docs"
+        }
+      ],
+      "with": {
+        "ACTION_ENTRY_POINT": "index.js",
+        "ACTION_OUTPUT_PATH": "./packages/sponsor-gated-support/build",
+        "ACTION_YML_PATH": "./action.yml",
+        "RELEASE_BRANCH_NAME": "releases"
+      }
+    }
+  ],
+  "urls": {
+    "homepage": "https://github.com/mrjackyliang/sponsor-gated-support",
+    "repository": "git+https://github.com/mrjackyliang/sponsor-gated-support.git",
+    "bugs": "https://github.com/mrjackyliang/sponsor-gated-support/issues",
+    "license": "https://github.com/mrjackyliang/sponsor-gated-support/blob/HEAD/LICENSE",
+    "documentation": "https://mrjackyliang.github.io/sponsor-gated-support/",
+    "fundSources": [
+      "https://github.com/sponsors/mrjackyliang",
+      "https://liang.nyc/paypal"
+    ]
+  },
+  "workspaces": {
+    "./": {
+      "role": "project",
+      "policy": "freezable",
+      "name": "sponsor-gated-support-project"
+    },
+    "./apps/docs": {
+      "role": "docs",
+      "policy": "freezable",
+      "name": "sponsor-gated-support-docs"
+    },
+    "./packages/sponsor-gated-support": {
+      "role": "package",
+      "policy": "distributable",
+      "name": "sponsor-gated-support"
+    }
+  },
+  "gitignore": {
+    "projectExcludes": [
+      "graphify-out/"
+    ]
+  },
+  "agents": [
+    "claude-code",
+    "codex"
+  ],
+  "recipes": {
+    "github": {
+      "sync-features": {
+        "enabled": true
+      },
+      "sync-identity": {
+        "enabled": true
+      },
+      "sync-policies": {
+        "enabled": true
+      }
+    },
+    "license": {
+      "update-copyright": {
+        "enabled": true
+      }
+    },
+    "read-me": {
+      "update-badges": {
+        "enabled": true
+      },
+      "update-credits": {
+        "enabled": true
+      },
+      "update-documentation": {
+        "enabled": true
+      },
+      "update-header": {
+        "enabled": true
+      },
+      "update-introduction": {
+        "enabled": true
+      }
+    },
+    "package-json": {
+      "./": {
+        "cleanup": {
+          "enabled": true,
+          "settings": {
+            "removeUnknownKeys": true,
+            "reorderKeys": true
+          }
+        },
+        "normalize-artifacts": {
+          "enabled": true
+        },
+        "normalize-bundler": {
+          "enabled": true
+        },
+        "normalize-dependencies": {
+          "enabled": true,
+          "settings": {
+            "pinDependencyVersions": true,
+            "pinDevDependencyVersions": true
+          }
+        },
+        "normalize-modules": {
+          "enabled": true
+        },
+        "normalize-tooling": {
+          "enabled": true
+        },
+        "sync-environment": {
+          "enabled": true,
+          "settings": {
+            "trackNodeLtsVersions": true
+          }
+        },
+        "sync-identity": {
+          "enabled": true
+        },
+        "sync-ownership": {
+          "enabled": true
+        }
+      },
+      "./packages/sponsor-gated-support": {
+        "cleanup": {
+          "enabled": true,
+          "settings": {
+            "removeUnknownKeys": true,
+            "reorderKeys": true
+          }
+        },
+        "normalize-artifacts": {
+          "enabled": true
+        },
+        "normalize-bundler": {
+          "enabled": true
+        },
+        "normalize-dependencies": {
+          "enabled": true,
+          "settings": {
+            "pinDependencyVersions": true,
+            "pinDevDependencyVersions": true
+          }
+        },
+        "normalize-modules": {
+          "enabled": true
+        },
+        "normalize-tooling": {
+          "enabled": true
+        },
+        "sync-environment": {
+          "enabled": true,
+          "settings": {
+            "trackNodeLtsVersions": true
+          }
+        },
+        "sync-identity": {
+          "enabled": true,
+          "settings": {
+            "description": true,
+            "keywords": true
+          }
+        },
+        "sync-ownership": {
+          "enabled": true,
+          "settings": {
+            "homepage": true,
+            "bugs": true,
+            "author": true,
+            "contributors": true,
+            "funding": true,
+            "repository": true
+          }
+        }
+      },
+      "./apps/docs": {
+        "cleanup": {
+          "enabled": true,
+          "settings": {
+            "removeUnknownKeys": true,
+            "reorderKeys": true
+          }
+        },
+        "normalize-artifacts": {
+          "enabled": true
+        },
+        "normalize-bundler": {
+          "enabled": true
+        },
+        "normalize-dependencies": {
+          "enabled": true,
+          "settings": {
+            "pinDependencyVersions": true,
+            "pinDevDependencyVersions": true
+          }
+        },
+        "normalize-modules": {
+          "enabled": true
+        },
+        "normalize-tooling": {
+          "enabled": true
+        },
+        "sync-environment": {
+          "enabled": true,
+          "settings": {
+            "trackNodeLtsVersions": true
+          }
+        },
+        "sync-identity": {
+          "enabled": true
+        },
+        "sync-ownership": {
+          "enabled": true
+        }
+      }
+    }
+  },
+  "environment": {
+    "project": {
+      "prefix": "PROJECT_"
+    },
+    "workspaces": {
+      "./": {
+        "prefix": "ROOT_"
+      },
+      "./packages/sponsor-gated-support": {
+        "prefix": "ACTION_",
+        "variables": [
+          {
+            "key": "ACTIONS_RUNNER_DEBUG",
+            "reach": "local",
+            "defaultValue": "false"
+          },
+          {
+            "key": "ACTIONS_STEP_DEBUG",
+            "reach": "local",
+            "defaultValue": "false"
+          },
+          {
+            "key": "INPUT_GITHUB_PERSONAL_ACCESS_TOKEN",
+            "reach": "local",
+            "defaultValue": ""
+          },
+          {
+            "key": "INPUT_GITHUB_WORKFLOW_TOKEN",
+            "reach": "local",
+            "defaultValue": ""
+          },
+          {
+            "key": "INPUT_ISSUE_LABELS",
+            "reach": "local",
+            "defaultValue": "support"
+          },
+          {
+            "key": "INPUT_ISSUE_LIMIT_COMMENTER",
+            "reach": "local",
+            "defaultValue": "true"
+          },
+          {
+            "key": "INPUT_ISSUE_LOCK_ON_CLOSE",
+            "reach": "local",
+            "defaultValue": "true"
+          },
+          {
+            "key": "INPUT_ISSUE_MESSAGE_NOT_SPONSOR",
+            "reach": "local",
+            "defaultValue": "Apologies! Only sponsoring users are allowed to open issues. Please sponsor the owner of this repository, then try again."
+          },
+          {
+            "key": "INPUT_ISSUE_MESSAGE_WELCOME",
+            "reach": "local",
+            "defaultValue": "Thank you for your support! We appreciate your sponsorship and are here to help. We will review your issue and get back to you as soon as possible."
+          },
+          {
+            "key": "INPUT_IS_ORGANIZATION",
+            "reach": "local",
+            "defaultValue": "false"
+          },
+          {
+            "key": "INPUT_SPONSOR_ACTIVE_ONLY",
+            "reach": "local",
+            "defaultValue": "true"
+          },
+          {
+            "key": "INPUT_SPONSOR_EXEMPT_FILE_LOCATION",
+            "reach": "local",
+            "defaultValue": "./SPONSOR_EXEMPT"
+          },
+          {
+            "key": "INPUT_SPONSOR_MINIMUM",
+            "reach": "local",
+            "defaultValue": "0"
+          }
+        ]
+      }
+    },
+    "workflows": {
+      "sponsor-check": {
+        "prefix": "SGS_"
+      }
+    }
+  },
+  "settings": {
+    "lockStepVersioning": true,
+    "versionStrategy": "semver"
+  }
+}

@@ -1,0 +1,22 @@
+{
+    "name": "Sponsor Gated Support",
+    "short_name": "Sponsor Gated Support",
+    "icons": [
+        {
+            "src": "/sponsor-gated-support/web-app-manifest-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/sponsor-gated-support/web-app-manifest-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "theme_color": "#B8860B",
+    "background_color": "#F0E6D2",
+    "start_url": "/sponsor-gated-support/",
+    "display": "standalone"
+}

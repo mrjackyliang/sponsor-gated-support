@@ -1,0 +1,67 @@
+---
+id: "personal-access-token"
+title: "Personal Access Token"
+sidebar_position: 3
+description: "Create the GitHub personal access token with read:org and read:user scopes that Sponsor Gated Support needs to retrieve your sponsor list."
+keywords:
+  - "sponsor gated support"
+  - "personal access token"
+  - "pat"
+  - "github token"
+  - "authentication"
+tags:
+  - "reference"
+  - "authentication"
+  - "personal access token"
+---
+
+import { Terminology } from '@cbnventures/docusaurus-preset-nova/blocks';
+
+Generate a GitHub <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">Personal Access Token</Terminology> (Classic) so the action can retrieve your <Terminology title="a sponsor whose sponsorship is currently active" to="/docs/reference/terminology#active-sponsor">active sponsors</Terminology> through the GitHub GraphQL API.
+
+## Why a Separate Token?
+
+Sponsor Gated Support uses two tokens, each with a distinct role:
+
+- **<Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">Personal Access Token</Terminology>** — reads your <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology> list via the GraphQL API. This token carries your identity, which is why it needs the `read:org` and `read:user` scopes.
+- **<Terminology title="GitHub's automatic token used for issue moderation" to="/docs/reference/terminology#workflow-token">Workflow token</Terminology> (`secrets.GITHUB_TOKEN`)** — handles all issue moderation, including commenting, closing, and locking. Because GitHub generates this token automatically on each workflow run, moderation actions appear under the "github-actions" bot instead of your personal account.
+
+Keeping the tokens separate means your <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">PAT</Terminology> never needs write access to issues, and moderation activity stays cleanly attributed to the bot.
+
+## Creating the Token
+
+1. Log in to GitHub and visit the [Personal Access Tokens (Classic)](https://github.com/settings/tokens) page.
+2. Click the "Generate new token" dropdown and select "Generate new token (classic)".
+3. In the "Note" field, enter a descriptive name such as "Sponsor Gated Support".
+4. Set the "Expiration" field to "No expiration". A long-lived token avoids silent workflow failures when the token expires.
+5. Under "Select scopes", enable `read:org` and `read:user`. No other scopes are needed.
+6. Click "Generate token".
+7. Copy the token (it starts with `ghp_`) and save it somewhere secure. GitHub won't show it again.
+
+## Storing the Token
+
+Store the token as a repository secret so the workflow can reference it at runtime.
+
+1. Navigate to your repository's **Settings** tab, then **Security** > **Secrets and variables** > **Actions**.
+2. Click "New repository secret".
+3. Set the name to `PERSONAL_ACCESS_TOKEN` and paste your token as the value.
+4. Click "Add secret".
+
+The workflow references this secret as `secrets.PERSONAL_ACCESS_TOKEN`. You don't need to change anything in the workflow file if you use this exact name.
+
+## Organization Repositories
+
+If you're running the action on a repository owned by an organization, the organization needs to allow classic <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">PAT</Terminology> access. Without this setting, the token can't authenticate against the organization's data.
+
+1. Open your organization's **Settings** tab.
+2. Navigate to **Third-party access** > **Personal access tokens** > **Settings**.
+3. Enable "Allow access via personal access tokens (classic)".
+
+## Security
+
+The token you create is deliberately read-only:
+
+- `read:org` lets the action check organization membership and sponsorship data.
+- `read:user` lets the action read <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology> relationships on your account.
+
+It is recommended to avoid granting any write scopes. The action never uses this token for issue moderation — it always uses the separate <Terminology title="GitHub's automatic token used for issue moderation" to="/docs/reference/terminology#workflow-token">workflow token</Terminology> for commenting, closing, and locking, so moderation actions appear under the "github-actions" bot.

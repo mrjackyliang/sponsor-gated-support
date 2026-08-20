@@ -1,0 +1,106 @@
+---
+id: "usage"
+title: "Usage"
+sidebar_position: 1
+description: "Add Sponsor Gated Support to a GitHub Actions workflow, configure the required permissions, and connect it to the inputs reference."
+keywords:
+  - "sponsor gated support"
+  - "usage"
+  - "workflow"
+  - "setup"
+  - "github action"
+tags:
+  - "getting-started"
+  - "usage"
+  - "workflow"
+---
+
+import { Terminology } from '@cbnventures/docusaurus-preset-nova/blocks';
+
+Add Sponsor Gated Support to a GitHub Actions workflow so that only <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology> and recognized contributors can open and comment on gated issues.
+
+## Prerequisites
+
+- **GitHub Sponsors enabled** — Your account (personal or organization) is enrolled in GitHub Sponsors and is receiving sponsorships.
+- **Repository access** — You have write access to the repository where the workflow will run.
+- **<Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">Personal access token</Terminology> created** — A classic <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">PAT</Terminology> with permission to read your <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology> data is stored as a repository secret. See [Personal Access Token](/docs/reference/personal-access-token/) for step-by-step creation instructions.
+
+## Basic Workflow
+
+Create a file named `sponsor-gated-support.yml` under `.github/workflows` with the contents below. You can adjust each input by following the [Inputs](/docs/reference/inputs/) reference.
+
+```yaml title=".github/workflows/sponsor-gated-support.yml"
+name: "Sponsor Gated Support"
+
+run-name: "Running a task to analyze support issues"
+
+on:
+  issue_comment:
+    types:
+      - "created"
+      - "edited"
+  issues:
+    types:
+      - "opened"
+      - "closed"
+
+permissions:
+  issues: "write"
+
+jobs:
+  check-issues:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
+      - name: "Check support issues"
+        uses: "mrjackyliang/sponsor-gated-support@v1.0.1"
+        with:
+          GITHUB_PERSONAL_ACCESS_TOKEN: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
+          GITHUB_WORKFLOW_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          ISSUE_LABELS: "${{ vars.ISSUE_LABELS }}"
+          ISSUE_LIMIT_COMMENTER: "${{ vars.ISSUE_LIMIT_COMMENTER }}"
+          ISSUE_LOCK_ON_CLOSE: "${{ vars.ISSUE_LOCK_ON_CLOSE }}"
+          ISSUE_MESSAGE_NOT_SPONSOR: "${{ vars.ISSUE_MESSAGE_NOT_SPONSOR }}"
+          ISSUE_MESSAGE_WELCOME: "${{ vars.ISSUE_MESSAGE_WELCOME }}"
+          IS_ORGANIZATION: "${{ vars.IS_ORGANIZATION }}"
+          SPONSOR_ACTIVE_ONLY: "${{ vars.SPONSOR_ACTIVE_ONLY }}"
+          SPONSOR_EXEMPT_FILE_LOCATION: "${{ vars.SPONSOR_EXEMPT_FILE_LOCATION }}"
+          SPONSOR_MINIMUM: "${{ vars.SPONSOR_MINIMUM }}"
+```
+
+The workflow triggers on `issue_comment` (created, edited) and `issues` (opened, closed). It requires `issues: write` permission so the action can post comments, close issues, and lock threads.
+
+The `actions/checkout@v4` step is necessary because the action reads the `SPONSOR_EXEMPT` file from your repository. Without the checkout, the exempt list can't be resolved.
+
+All remaining inputs beyond the two tokens are GitHub variables (`vars.*`), not secrets. You can configure them under **Settings > Secrets and variables > Actions > Variables** in your repository.
+
+## Tokens
+
+The action uses two separate tokens, each with a distinct role. Both are referenced from the `secrets` context.
+
+- **`GITHUB_PERSONAL_ACCESS_TOKEN`** — A <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">personal access token</Terminology> you create and store as a repository secret (e.g., `secrets.PERSONAL_ACCESS_TOKEN`). The action uses it to query the GitHub Sponsors API and determine whether the issue opener is an <Terminology title="a sponsor whose sponsorship is currently active" to="/docs/reference/terminology#active-sponsor">active sponsor</Terminology>.
+- **`GITHUB_WORKFLOW_TOKEN`** — The automatic `GITHUB_TOKEN` that GitHub Actions provides on every run (referenced as `secrets.GITHUB_TOKEN`). The action uses it to perform moderation tasks like posting comments, closing issues, and locking threads.
+
+Separating the tokens keeps the <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">PAT</Terminology> scoped to read-only <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology> data while the <Terminology title="GitHub's automatic token used for issue moderation" to="/docs/reference/terminology#workflow-token">workflow token</Terminology> handles write operations against the repository. The <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">PAT</Terminology> doesn't need write access to your repositories.
+
+## Custom Messages
+
+You can personalize the messages the action posts by setting two GitHub variables in your repository settings.
+
+- **`ISSUE_MESSAGE_WELCOME`** — Posted when a sponsoring user opens a gated issue. It defaults to a thank-you note confirming their sponsorship and letting them know the issue will be reviewed.
+- **`ISSUE_MESSAGE_NOT_SPONSOR`** — Posted when a non-sponsoring user opens a gated issue. It defaults to a notice explaining that only <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology> can open issues and asking the user to become a <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology> first.
+
+Both values support Markdown formatting, so you can include links, emphasis, and line breaks to match your project's tone. If you leave either variable unset, the action uses the built-in default message.
+
+## Label Scoping
+
+The `ISSUE_LABELS` input controls which issues the action gates. It accepts a comma-delimited list of label names and defaults to `support`.
+
+- When set to a single label (e.g., `support`), only issues carrying that label are checked for sponsorship.
+- When set to multiple labels (e.g., `support,bug,question`), any issue carrying at least one of those labels is gated.
+- When left empty, the value falls back to `support` and issues with that label are still gated.
+
+<Terminology title="restricts gating to your configured issue labels" to="/docs/reference/terminology#label-scoping">Label scoping</Terminology> lets you run the action alongside other workflows without affecting issues that don't need <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology> verification. If your repository lives under a GitHub organization rather than a personal account, you can set `IS_ORGANIZATION` to `true` so the action queries the organization's <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology> list instead of the user's.
+
+For the full list of inputs with their types, defaults, and valid values, see the [Inputs](/docs/reference/inputs/) reference.

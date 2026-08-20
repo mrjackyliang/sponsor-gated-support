@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024px" height="1024px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>sgs-logo-nobg</title>
+    <g id="sgs-logo-nobg" stroke="none" fill="none" fill-rule="evenodd" stroke-width="1">
+        <g id="Group">
+            <g fill="#6B5230" id="Oval">
+                <circle cx="985.135314" cy="512" r="38.8646865"></circle>
+                <circle cx="921.6" cy="275.432343" r="38.8646865"></circle>
+                <circle cx="748.567657" cy="102.4" r="38.8646865"></circle>
+                <circle cx="512" cy="38.8646865" r="38.8646865"></circle>
+                <circle cx="275.432343" cy="102.4" r="38.8646865"></circle>
+                <circle cx="102.4" cy="275.432343" r="38.8646865"></circle>
+                <circle cx="38.8646865" cy="512" r="38.8646865"></circle>
+                <circle cx="102.4" cy="748.567657" r="38.8646865"></circle>
+                <circle cx="275.432343" cy="921.6" r="38.8646865"></circle>
+                <circle cx="512" cy="985.135314" r="38.8646865"></circle>
+                <circle cx="748.567657" cy="921.6" r="38.8646865"></circle>
+                <circle cx="921.6" cy="748.567657" r="38.8646865"></circle>
+            </g>
+            <g transform="translate(163.9076, 200.0686)" fill="#A87B36" id="Oval">
+                <circle cx="618.455446" cy="311.931353" r="77.7293729"></circle>
+                <circle cx="483.273927" cy="77.7293729" r="77.7293729"></circle>
+                <circle cx="212.910891" cy="77.7293729" r="77.7293729"></circle>
+                <circle cx="77.7293729" cy="311.931353" r="77.7293729"></circle>
+                <circle cx="212.910891" cy="546.133333" r="77.7293729"></circle>
+                <circle cx="483.273927" cy="546.133333" r="77.7293729"></circle>
+            </g>
+            <circle id="Oval" fill="#F5D9A8" cx="512" cy="512" r="121.663366"></circle>
+        </g>
+    </g>
+</svg>

@@ -1,78 +1,35 @@
 {
-  "name": "sponsor-gated-support",
-  "displayName": "Sponsor Gated Support",
-  "version": "1.0.1",
-  "description": "A GitHub Action designed to help project maintainers manage support requests in a way that encourages sponsorship and recognizes valuable contributors",
-  "main": "./build/index.js",
-  "exports": "./build/index.js",
-  "type": "module",
+  "name": "sponsor-gated-support-project",
+  "version": "0.0.0",
+  "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "local-action run . src/index.ts .env",
-    "build": "npm-run-all --sequential build:*",
-    "build:reset": "rimraf ./build",
-    "build:lint": "npx eslint ./src",
-    "build:ncc": "npx ncc build src/index.ts -o build --source-map --license licenses.txt",
-    "prepare": "npm run build"
+    "dev": "turbo run dev",
+    "prod": "turbo run prod",
+    "build": "turbo run build --concurrency=2",
+    "check": "turbo run check --concurrency=2 && eslint . --max-warnings=0 && nova utility type-check --project tsconfig.config.json && nova utility type-check --project tsconfig.scripts.json && nova utility type-check --project tsconfig.tests.json && vitest run",
+    "deploy": "turbo run deploy --concurrency=2",
+    "clean": "turbo run clean",
+    "changelog": "nova utility changelog",
+    "recipes": "nova utility run-recipes --replace-file",
+    "postinstall": "node ./scripts/link-nova.mjs"
   },
-  "types": "",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/mrjackyliang/sponsor-gated-support.git"
-  },
-  "funding": [
-    {
-      "type": "github",
-      "url": "https://github.com/sponsors/mrjackyliang"
-    },
-    {
-      "type": "custom",
-      "url": "https://liang.nyc/paypal"
-    }
+  "workspaces": [
+    "./apps/*",
+    "./packages/*"
   ],
-  "keywords": [
-    "actions",
-    "github-sponsors",
-    "github-sponsors-action",
-    "patreon",
-    "customer-service"
-  ],
-  "author": {
-    "name": "Jacky Liang",
-    "email": "hello@mrjackyliang.com",
-    "url": "https://www.mrjackyliang.com"
-  },
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/mrjackyliang/sponsor-gated-support/issues"
-  },
-  "files": [
-    "./build"
-  ],
-  "homepage": "https://github.com/mrjackyliang/sponsor-gated-support",
+  "packageManager": "npm@11.18.0",
   "engines": {
-    "node": ">=20"
-  },
-  "dependencies": {
-    "@actions/core": "1.10.1",
-    "@actions/github": "6.0.0",
-    "json-to-graphql-query": "2.2.5",
-    "lodash": "4.17.21",
-    "zod": "3.23.8"
+    "node": "^22 || ^24"
   },
   "devDependencies": {
-    "@github/local-action": "1.5.1",
-    "@types/lodash": "4.17.7",
-    "@types/node": "22.1.0",
-    "@typescript-eslint/eslint-plugin": "7.17.0",
-    "@typescript-eslint/parser": "7.17.0",
-    "@vercel/ncc": "0.38.1",
-    "eslint": "8.57.0",
-    "eslint-config-airbnb-base": "15.0.0",
-    "eslint-config-airbnb-typescript": "18.0.0",
-    "eslint-plugin-import": "2.29.1",
-    "npm-run-all": "4.1.5",
-    "rimraf": "6.0.1",
-    "typescript": "5.5.4"
+    "@cbnventures/nova": "0.25.1",
+    "jiti": "2.6.1",
+    "turbo": "2.10.6",
+    "typescript": "5.9.3",
+    "vitest": "4.1.3"
+  },
+  "overrides": {
+    "webpack": ">=5.95.0"
   }
 }

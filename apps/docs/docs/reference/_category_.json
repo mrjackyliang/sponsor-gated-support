@@ -1,0 +1,10 @@
+{
+  "label": "Reference",
+  "position": 3,
+  "collapsible": true,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "description": "Review every input the action accepts, check the result output, and create the token it needs."
+  }
+}

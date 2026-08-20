@@ -1,0 +1,78 @@
+{
+  "name": "sponsor-gated-support",
+  "version": "2.0.0",
+  "description": "A GitHub Action that reserves issue support for sponsors and recognized contributors who back your work",
+  "keywords": [
+    "actions",
+    "github-sponsors",
+    "github-sponsors-action",
+    "patreon",
+    "customer-service"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/mrjackyliang/sponsor-gated-support",
+  "bugs": {
+    "email": "bugs@mrjackyliang.com",
+    "url": "https://github.com/mrjackyliang/sponsor-gated-support/issues"
+  },
+  "author": {
+    "name": "Jacky Liang",
+    "email": "hello@mrjackyliang.com",
+    "url": "https://www.mrjackyliang.com"
+  },
+  "funding": [
+    "https://github.com/sponsors/mrjackyliang",
+    "https://liang.nyc/paypal"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrjackyliang/sponsor-gated-support.git",
+    "directory": "packages/sponsor-gated-support"
+  },
+  "exports": {
+    ".": {
+      "default": "./build/index.js",
+      "require": "./build/index.js"
+    }
+  },
+  "main": "./build/index.js",
+  "type": "module",
+  "files": [
+    "./build"
+  ],
+  "private": false,
+  "scripts": {
+    "start": "local-action run . src/index.ts .env",
+    "build": "nova utility run-scripts --sequential 'build:*'",
+    "build:reset": "shx rm -rf ./build",
+    "build:ncc": "npx ncc build src/index.ts -o build --source-map --license licenses.txt",
+    "check": "nova utility run-scripts --sequential 'check:*'",
+    "check:lint": "eslint ./ --max-warnings=0",
+    "check:types-app": "nova utility type-check --project tsconfig.json",
+    "check:types-config": "nova utility type-check --project tsconfig.config.json",
+    "check:types-tests": "nova utility type-check --project tsconfig.tests.json",
+    "check:test": "vitest run",
+    "postinstall": "npm run build"
+  },
+  "engines": {
+    "node": "^22 || ^24"
+  },
+  "dependencies": {
+    "@actions/core": "1.10.1",
+    "@actions/github": "6.0.0",
+    "json-to-graphql-query": "2.2.5",
+    "lodash": "4.17.21",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@cbnventures/nova": "0.25.1",
+    "@github/local-action": "1.5.1",
+    "@types/lodash": "4.17.7",
+    "@types/node": "25.6.0",
+    "@vercel/ncc": "0.38.1",
+    "eslint": "9.39.3",
+    "shx": "0.4.0",
+    "typescript": "5.9.3",
+    "vitest": "4.1.3"
+  }
+}

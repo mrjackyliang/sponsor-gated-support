@@ -1,0 +1,261 @@
+.hero {
+  overflow-x: clip;
+}
+
+.heroInner {
+  max-width: var(--nova-grid-container-max);
+  margin-inline: auto;
+  padding-inline: var(--nova-grid-padding);
+  padding-block: clamp(3rem, 8vh, 5rem);
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+/* =====================================================================
+   Hero content (left column — 65%)
+   ===================================================================== */
+
+.heroContent {
+  flex: 65;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.75rem, 1.5vw, 1rem);
+}
+
+.heroContent :global(.nova-hero-eyebrow),
+.heroContent :global(.nova-hero-heading),
+.heroContent :global(.nova-hero-tagline),
+.heroContent :global(.nova-hero-actions) {
+  margin: 0;
+}
+
+.heroContent :global(.nova-hero-tagline) {
+  max-width: none;
+}
+
+.heroActions {
+  justify-content: flex-start;
+}
+
+/* =====================================================================
+   Issue Verdict cards (right column — 35%)
+   ===================================================================== */
+
+.verdictStack {
+  flex: 35;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.verdictCard {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--nova-color-border);
+  border-radius: 2px;
+  background: var(--nova-color-surface-raised);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.verdictTop {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+/* =====================================================================
+   Avatars
+   ===================================================================== */
+
+.verdictAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.avatarSponsor {
+  background: color-mix(in srgb, var(--nova-color-accent-500) 20%, var(--nova-color-surface-raised));
+  border: 2px solid var(--nova-color-accent-500);
+}
+
+.avatarNone {
+  background: color-mix(in srgb, var(--nova-color-text-muted) 15%, var(--nova-color-surface-raised));
+  border: 2px solid var(--nova-color-text-muted);
+}
+
+/* =====================================================================
+   Issue info
+   ===================================================================== */
+
+.verdictInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.verdictTitle {
+  font-family: var(--nova-font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--nova-color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.verdictMeta {
+  font-family: var(--nova-font-code);
+  font-size: 0.625rem;
+  color: var(--nova-color-text-soft);
+}
+
+.verdictLabel {
+  font-family: var(--nova-font-code);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--nova-color-accent-500) 10%, transparent);
+  color: var(--nova-color-accent-600);
+}
+
+/* =====================================================================
+   Verdict stamps
+   ===================================================================== */
+
+.verdictStamp {
+  font-family: var(--nova-font-code);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.stampApproved {
+  background: color-mix(in srgb, var(--nova-color-accent-500) 10%, transparent);
+  color: var(--nova-color-accent-600);
+}
+
+.stampClosed {
+  background: color-mix(in srgb, var(--nova-color-text-muted) 10%, transparent);
+  color: var(--nova-color-text-muted);
+}
+
+/* =====================================================================
+   Bot comments
+   ===================================================================== */
+
+.verdictComment {
+  padding: 0.5rem 0.75rem;
+  border-left: 2px solid var(--nova-color-accent-600);
+  background: color-mix(in srgb, var(--nova-color-accent-500) 4%, var(--nova-color-surface));
+  border-radius: 0 2px 2px 0;
+  font-family: var(--nova-font-body);
+  font-size: 0.6875rem;
+  font-style: italic;
+  color: var(--nova-color-text-muted);
+  line-height: 1.6;
+}
+
+.verdictCommentClosed {
+  border-left-color: var(--nova-color-text-muted);
+  background: color-mix(in srgb, var(--nova-color-text-muted) 4%, var(--nova-color-surface));
+}
+
+/* =====================================================================
+   Animation — staggered card reveal
+   ===================================================================== */
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .verdictCard {
+    opacity: 0;
+    animation: cardIn 0.4s ease-out forwards;
+  }
+
+  .verdictCard:nth-child(1) {
+    animation-delay: 0.2s;
+  }
+
+  .verdictCard:nth-child(2) {
+    animation-delay: 0.5s;
+  }
+}
+
+/* =====================================================================
+   Mobile — stack vertically
+   ===================================================================== */
+
+/* =====================================================================
+   Dark mode — brighter verdict colors
+   ===================================================================== */
+
+:global([data-theme="dark"]) .avatarSponsor {
+  border-color: var(--nova-color-accent-400);
+  background: color-mix(in srgb, var(--nova-color-accent-400) 25%, var(--nova-color-surface-raised));
+}
+
+:global([data-theme="dark"]) .stampApproved {
+  background: color-mix(in srgb, var(--nova-color-accent-400) 18%, transparent);
+  color: var(--nova-color-accent-300);
+}
+
+:global([data-theme="dark"]) .stampClosed {
+  background: color-mix(in srgb, var(--nova-color-text-muted) 18%, transparent);
+  color: var(--nova-color-text-soft);
+}
+
+:global([data-theme="dark"]) .verdictLabel {
+  background: color-mix(in srgb, var(--nova-color-accent-400) 18%, transparent);
+  color: var(--nova-color-accent-300);
+}
+
+:global([data-theme="dark"]) .verdictComment {
+  border-left-color: var(--nova-color-accent-400);
+  background: color-mix(in srgb, var(--nova-color-accent-400) 8%, var(--nova-color-surface));
+}
+
+:global([data-theme="dark"]) .verdictCommentClosed {
+  border-left-color: var(--nova-color-text-soft);
+  background: color-mix(in srgb, var(--nova-color-text-muted) 8%, var(--nova-color-surface));
+}
+
+/* =====================================================================
+   Mobile — stack vertically
+   ===================================================================== */
+
+@media (max-width: 1024px) {
+  .heroInner {
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: center;
+  }
+
+  .heroActions {
+    justify-content: center;
+  }
+
+  .verdictStack {
+    max-width: 24rem;
+    width: 100%;
+    text-align: left;
+  }
+}

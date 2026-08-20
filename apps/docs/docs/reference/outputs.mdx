@@ -1,0 +1,55 @@
+---
+id: "outputs"
+title: "Outputs"
+sidebar_position: 2
+description: "Check the result output to determine whether the gating run succeeded or was intentionally skipped, and react to the outcome in downstream workflow steps."
+keywords:
+  - "sponsor gated support"
+  - "outputs"
+  - "action outputs"
+  - "result"
+  - "reference"
+tags:
+  - "reference"
+  - "outputs"
+---
+
+import { Terminology } from '@cbnventures/docusaurus-preset-nova/blocks';
+
+Exposes a single output that later workflow steps can read to decide what happens next.
+
+| Name     | Description                                                    |
+|----------|----------------------------------------------------------------|
+| `result` | The success or failure response after the action has completed |
+
+## Values
+
+The `result` output resolves to one of two string values:
+
+- `"true"` — handling completed successfully, or the action intentionally skipped the event (e.g., the issue lacks a <Terminology title="a label that subjects an issue to gating" to="/docs/reference/terminology#gated-label">gated label</Terminology>, the comment belongs to the opener or an <Terminology title="a member, owner, contributor, or collaborator" to="/docs/reference/terminology#insider">insider</Terminology>, or the issue is already locked)
+- `"false"` — the payload was empty or invalid, the event action is unsupported, a required setting was disabled, or an operation (commenting, closing, locking, or deleting) failed
+
+The action handles two event types: `issues` (opened and closed) and `issue_comment` (created and edited). Each path sets `result` independently based on whether the operation succeeds, is intentionally skipped, or encounters an error.
+
+## Reading the Output
+
+You can reference the output in a downstream step with `steps.<id>.outputs.result`, where `<id>` matches the step's `id` field. This is useful for sending a notification or opening an issue when the action reports a failure.
+
+```yaml title=".github/workflows/sponsor-gated-support.yml"
+jobs:
+  gate:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Check sponsor status"
+        id: "sponsor-gate"
+        uses: "mrjackyliang/sponsor-gated-support@v1.0.1"
+        with:
+          GITHUB_PERSONAL_ACCESS_TOKEN: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
+          GITHUB_WORKFLOW_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: "Notify on failure"
+        if: steps.sponsor-gate.outputs.result == 'false'
+        run: echo "Sponsor Gated Support reported a failure."
+```
+
+The `if` conditional evaluates the string value of `result`, so you can gate any follow-up step — a Slack message, an issue creation, or a repository dispatch — on whether the run succeeded.

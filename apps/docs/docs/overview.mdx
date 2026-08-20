@@ -1,0 +1,71 @@
+---
+id: "overview"
+title: "Overview"
+sidebar_position: 1
+description: "Restrict GitHub issue creation to sponsors, contributors, and exempt users, checked live against the GitHub Sponsors API, with configurable welcome messages."
+keywords:
+  - "sponsor gated support"
+  - "overview"
+  - "github action"
+  - "github sponsors"
+  - "issue management"
+  - "sponsorship"
+tags:
+  - "overview"
+  - "github action"
+  - "sponsorship"
+---
+
+import { Terminology } from '@cbnventures/docusaurus-preset-nova/blocks';
+
+Restrict GitHub issue creation to <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology>, contributors, and exempt users so your support time goes to the people who fund and build the project.
+
+## Why Use This Action?
+
+- Gates only the issue labels you configure (default: `support`) so bug reports and feature requests stay freely accessible.
+- Checks the issue author against your live GitHub Sponsors list so access decisions stay current without manual updates.
+- Welcomes <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology> with a configurable message when they open an issue, giving them immediate confirmation that their request was received.
+- Recognizes contributors and collaborators automatically so people who build the project don't need a sponsorship to get help.
+- Supports an <Terminology title="username list that bypasses the sponsorship check" to="/docs/reference/terminology#exempt-file">exempt file</Terminology> of usernames so you can grant access to anyone, no sponsorship required.
+- Moderates comments on gated issues by removing posts from non-<Terminology title="a member, owner, contributor, or collaborator" to="/docs/reference/terminology#insider">insiders</Terminology>, keeping the conversation focused between the author and your team.
+- Locks gated issues on close so resolved threads don't attract drive-by comments.
+- Enforces sponsorship thresholds so you can require active status and a minimum monthly <Terminology title="a GitHub Sponsors pricing tier" to="/docs/reference/terminology#tier">tier</Terminology> amount.
+- Works on both user-owned and organization-owned repositories so teams and solo maintainers use the same setup.
+
+## How It Works
+
+When an issue event fires, the action runs through a short decision flow before taking any moderation steps. It uses two tokens: a <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">personal access token</Terminology> to read your <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology> from the GitHub API, and the workflow's built-in token to moderate issues so actions appear under the "github-actions" bot instead of your account.
+
+### Label Check
+
+The action reads the issue's labels and compares them against your configured list (default: `support`). If none of the <Terminology title="a label that subjects an issue to gating" to="/docs/reference/terminology#gated-label">gated labels</Terminology> are present, the action exits and the issue proceeds normally.
+
+### Author Check
+
+For issues carrying a <Terminology title="a label that subjects an issue to gating" to="/docs/reference/terminology#gated-label">gated label</Terminology>, the action checks the author's relationship to the repository. Members, owners, contributors, collaborators, and users listed in the <Terminology title="username list that bypasses the sponsorship check" to="/docs/reference/terminology#exempt-file">exempt file</Terminology> pass immediately without a sponsorship lookup.
+
+### Sponsor Check
+
+If the author isn't recognized as a contributor or exempt user, the action queries your GitHub Sponsors list through the GraphQL API. It pages through all <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology> and optionally filters for active-only status and a minimum <Terminology title="a GitHub Sponsors pricing tier" to="/docs/reference/terminology#tier">tier</Terminology> amount in cents.
+
+### Outcome
+
+- **<Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">Sponsor</Terminology> found** — The action posts your welcome message on the issue.
+- **Not a <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology>** — The action posts your not-sponsor message, closes the issue, and locks it.
+
+After the initial check, the action continues to moderate the issue's lifecycle. Comments from non-<Terminology title="a member, owner, contributor, or collaborator" to="/docs/reference/terminology#insider">insiders</Terminology> on gated issues are automatically deleted, and gated issues are locked when closed.
+
+## Getting Started
+
+1. Create a <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">personal access token</Terminology> with `read:org` and `read:user` scopes, then store it as a repository secret.
+2. Add the action to a workflow file that triggers on `issues` and `issue_comment` events.
+3. Pass both the <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">personal access token</Terminology> and the workflow's built-in `GITHUB_TOKEN` to the action so it can fetch <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology> and moderate issues separately.
+4. Configure the workflow variables for your labels, messages, and sponsorship thresholds.
+5. Optionally create a `SPONSOR_EXEMPT` file in your repository root to list usernames that bypass the sponsorship requirement.
+
+## Next Steps
+
+- [Usage](/docs/getting-started/usage/) — Add the action to your repository with a workflow.
+- [Inputs](/docs/reference/inputs/) — Every workflow variable and its default.
+- [Outputs](/docs/reference/outputs/) — The `result` output and how to react to it in later steps.
+- [Personal Access Token](/docs/reference/personal-access-token/) — Create the token the action needs to read your <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology>.
