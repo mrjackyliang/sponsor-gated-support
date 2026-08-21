@@ -1,0 +1,4 @@
+import type { Lib_Action_IssueCommentAction_Config, Lib_Action_IssueCommentAction_Payload, Lib_Action_IssueCommentAction_Returns, Lib_Action_IssuesAction_Config, Lib_Action_IssuesAction_Payload, Lib_Action_IssuesAction_Returns, Lib_Action_IssuesAction_Sponsors } from '../types/lib/action.d.ts';
+export declare function issueCommentAction(payload: Lib_Action_IssueCommentAction_Payload, config: Lib_Action_IssueCommentAction_Config): Lib_Action_IssueCommentAction_Returns;
+export declare function issuesAction(payload: Lib_Action_IssuesAction_Payload, config: Lib_Action_IssuesAction_Config, sponsors: Lib_Action_IssuesAction_Sponsors): Lib_Action_IssuesAction_Returns;
+//# sourceMappingURL=action.d.ts.map

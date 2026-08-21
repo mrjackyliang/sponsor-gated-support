@@ -1,0 +1,61 @@
+name: "Sponsor Gated Support"
+description: "A GitHub Action designed to ensure that only sponsors and recognized contributors have access to support"
+author: "Jacky Liang"
+
+branding:
+  icon: "star"
+  color: "orange"
+
+inputs:
+  GITHUB_PERSONAL_ACCESS_TOKEN:
+    description: "Personal access token from GitHub used to fetch your sponsors"
+    required: true
+    default: ""
+  GITHUB_WORKFLOW_TOKEN:
+    description: "Workflow token from GitHub used to perform issue and issue comment moderation"
+    required: true
+    default: ""
+  ISSUE_LABELS:
+    description: "Only set limits on issues with these labels (comma-delimited list)"
+    required: false
+    default: "support"
+  ISSUE_LIMIT_COMMENTER:
+    description: "Allow only the issue opener, members, owners, contributors, and collaborators to comment on issues"
+    required: false
+    default: "true"
+  ISSUE_LOCK_ON_CLOSE:
+    description: "Lock issues as soon as they become closed"
+    required: false
+    default: "true"
+  ISSUE_MESSAGE_NOT_SPONSOR:
+    description: "Message to send when a non-sponsoring user opens an issue"
+    required: false
+    default: "Apologies! Only sponsoring users are allowed to open issues. Please sponsor the owner of this repository, then try again."
+  ISSUE_MESSAGE_WELCOME:
+    description: "Message to send when a sponsoring user opens an issue"
+    required: false
+    default: "Thank you for your support! We appreciate your sponsorship and are here to help. We will review your issue and get back to you as soon as possible."
+  IS_ORGANIZATION:
+    description: "If this workflow is being used on an organization-owned repository"
+    required: false
+    default: "false"
+  SPONSOR_ACTIVE_ONLY:
+    description: "Allow only active sponsoring users to open issues"
+    required: false
+    default: "true"
+  SPONSOR_EXEMPT_FILE_LOCATION:
+    description: "Path to a file containing a list of users who are exempt from the sponsorship requirement"
+    required: false
+    default: "./SPONSOR_EXEMPT"
+  SPONSOR_MINIMUM:
+    description: "Allow only sponsoring users that reach this minimum amount (in cents) to open issues"
+    required: false
+    default: "0"
+
+outputs:
+  result:
+    description: "The success or failure response after the action has completed"
+
+runs:
+  using: "node20"
+  main: "action/index.js"

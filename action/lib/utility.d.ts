@@ -1,0 +1,10 @@
+import type { Lib_Utility_AddIssueComment_Body, Lib_Utility_AddIssueComment_Config, Lib_Utility_AddIssueComment_NodeId, Lib_Utility_AddIssueComment_Returns, Lib_Utility_CloseIssue_Config, Lib_Utility_CloseIssue_NodeId, Lib_Utility_CloseIssue_Returns, Lib_Utility_DeleteIssueComment_Config, Lib_Utility_DeleteIssueComment_NodeId, Lib_Utility_DeleteIssueComment_Returns, Lib_Utility_GetConfig_Returns, Lib_Utility_GetContext_Returns, Lib_Utility_GetSponsors_Config, Lib_Utility_GetSponsors_Cursor, Lib_Utility_GetSponsors_Results, Lib_Utility_GetSponsors_Returns, Lib_Utility_GetSponsorsExempt_Config, Lib_Utility_GetSponsorsExempt_Returns, Lib_Utility_LockIssue_Config, Lib_Utility_LockIssue_NodeId, Lib_Utility_LockIssue_Returns } from '../types/lib/utility.d.ts';
+export declare function addIssueComment(nodeId: Lib_Utility_AddIssueComment_NodeId, body: Lib_Utility_AddIssueComment_Body, config: Lib_Utility_AddIssueComment_Config): Lib_Utility_AddIssueComment_Returns;
+export declare function closeIssue(nodeId: Lib_Utility_CloseIssue_NodeId, config: Lib_Utility_CloseIssue_Config): Lib_Utility_CloseIssue_Returns;
+export declare function deleteIssueComment(nodeId: Lib_Utility_DeleteIssueComment_NodeId, config: Lib_Utility_DeleteIssueComment_Config): Lib_Utility_DeleteIssueComment_Returns;
+export declare function getConfig(): Lib_Utility_GetConfig_Returns;
+export declare function getContext(): Lib_Utility_GetContext_Returns;
+export declare function getSponsors(config: Lib_Utility_GetSponsors_Config, cursor?: Lib_Utility_GetSponsors_Cursor, results?: Lib_Utility_GetSponsors_Results): Lib_Utility_GetSponsors_Returns;
+export declare function getSponsorsExempt(config: Lib_Utility_GetSponsorsExempt_Config): Lib_Utility_GetSponsorsExempt_Returns;
+export declare function lockIssue(nodeId: Lib_Utility_LockIssue_NodeId, config: Lib_Utility_LockIssue_Config): Lib_Utility_LockIssue_Returns;
+//# sourceMappingURL=utility.d.ts.map
