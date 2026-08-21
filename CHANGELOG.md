@@ -1,5 +1,10 @@
 # sponsor-gated-support
 
+## 2.0.1 - 2026-08-20
+
+### UPDATED
+- Updated the project homepage URL to point to the documentation site and added a logo URL for README branding.
+
 ## 2.0.0 - 2026-08-20
 
 ### UPDATED
