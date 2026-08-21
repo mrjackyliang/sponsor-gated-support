@@ -29,15 +29,12 @@
     "node": "^22 || ^24"
   },
   "dependencies": {
-    "@cbnventures/docusaurus-preset-nova": "0.25.1",
-    "@cbnventures/nova": "0.25.1",
+    "@cbnventures/docusaurus-preset-nova": "0.25.2",
+    "@cbnventures/nova": "0.25.2",
     "@docusaurus/core": "3.10.0",
     "@iconify/react": "6.0.2",
     "react": "19.2.5",
     "react-dom": "19.2.5"
-  },
-  "overrides": {
-    "webpack": "<5.106.0"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "3.10.0",

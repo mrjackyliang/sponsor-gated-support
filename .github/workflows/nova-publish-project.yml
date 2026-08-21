@@ -123,6 +123,7 @@ jobs:
         if: "${{ env.PUBLISH == 'true' }}"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          TAG_NAME: "${{ github.event.release.tag_name }}"
         run: |
           set -euo pipefail
           rm -rf "$RUNNER_TEMP/release"
@@ -136,6 +137,14 @@ jobs:
           if git ls-remote --exit-code --heads origin "releases" > /dev/null; then
             git fetch origin "releases"
             git reset --hard "origin/releases"
+
+            # Guard: block re-releases when the releases branch already carries this version.
+            LAST_MSG="$(git log -1 --format='%s' 2>/dev/null || true)"
+            if [ "$LAST_MSG" = "Release $TAG_NAME" ]; then
+              echo "::error::Version $TAG_NAME was already published to the releases branch. Delete the existing release before re-publishing."
+              exit 1
+            fi
+
             git rm -rf . > /dev/null 2>&1 || true
           fi
 
@@ -157,9 +166,11 @@ jobs:
           # resolve there instead. Only the main key inside the runs block is rewritten.
           sed -i -E '/^runs:/,$ s#^([[:space:]]+main:[[:space:]]*).*#\1"action/index.js"#' "$STAGE/action.yml"
 
-          # Optional: common community-repo files. Copy if present on main, skip silently if not.
+          # Optional: common community-repo files. Prefer workspace-level over root.
           for optional in README.md LICENSE SECURITY.md NOTICE CHANGELOG.md; do
-            if [ -f "$optional" ]; then
+            if [ -f "./packages/sponsor-gated-support/$optional" ]; then
+              cp "./packages/sponsor-gated-support/$optional" "$STAGE/$optional"
+            elif [ -f "$optional" ]; then
               cp "$optional" "$STAGE/$optional"
             fi
           done

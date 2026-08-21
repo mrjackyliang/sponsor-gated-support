@@ -9,8 +9,9 @@
 - Adopted Nova GitHub generator for CI workflows (nova-check, nova-lock-inactive-issues, nova-publish-project) and issue templates (BUG-REPORT, FEATURE-REQUEST, SUPPORT-REQUEST) with config.yml routing.
 - Restructured into a Turborepo monorepo with the action source under packages/sponsor-gated-support/, added turbo.json pipeline, and split tsconfig into app, config, scripts, and tests targets.
 - Narrowed OctokitResponseRoot from string to 'organization' | 'viewer' and OctokitResponsePath from string[] to [OctokitResponseRoot, 'sponsorshipsAsMaintainer'] for type-safe GraphQL response traversal.
-- Updated @cbnventures/nova to 0.25.1 and @cbnventures/docusaurus-preset-nova to 0.25.1.
-- Added a webpack version override (<5.106.0) to the docs site to prevent the Docusaurus 3.10 Progress Plugin incompatibility with webpack 5.106.0 and later.
+- Updated @cbnventures/nova to 0.25.2 and @cbnventures/docusaurus-preset-nova to 0.25.2.
+- Regenerated CI workflows with the updated Nova GitHub Action publish template.
+- Tightened the root webpack version override to >=5.95.0 <5.106.0 to prevent the Docusaurus 3.10 Progress Plugin incompatibility with webpack 5.106.0 and later.
 
 ### FIXED
 - Removed a stray trailing double-quote from the debug message logged when the SPONSOR_EXEMPT file is not found.
