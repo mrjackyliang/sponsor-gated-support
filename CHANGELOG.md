@@ -1,5 +1,10 @@
 # sponsor-gated-support
 
+## 2.0.2 - 2026-08-21
+
+### FIXED
+- Updated the GitHub Action runtime from Node 20 to Node 24 ahead of the fall 2026 Node 20 removal from GitHub Actions runners.
+
 ## 2.0.1 - 2026-08-20
 
 ### UPDATED
