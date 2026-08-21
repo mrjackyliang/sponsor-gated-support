@@ -57,5 +57,5 @@ outputs:
     description: "The success or failure response after the action has completed"
 
 runs:
-  using: "node20"
+  using: "node24"
   main: "./packages/sponsor-gated-support/build/index.js"
