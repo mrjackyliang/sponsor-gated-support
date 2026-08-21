@@ -1,6 +1,6 @@
 {
   "name": "sponsor-gated-support",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A GitHub Action that reserves issue support for sponsors and recognized contributors who back your work",
   "keywords": [
     "actions",
@@ -10,7 +10,7 @@
     "customer-service"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/mrjackyliang/sponsor-gated-support",
+  "homepage": "https://mrjackyliang.github.io/sponsor-gated-support/",
   "bugs": {
     "email": "bugs@mrjackyliang.com",
     "url": "https://github.com/mrjackyliang/sponsor-gated-support/issues"

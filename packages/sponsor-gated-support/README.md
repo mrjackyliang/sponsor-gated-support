@@ -8,9 +8,12 @@
 
 <div align="center">
 <!-- nova-region: header -->
-  <a href="https://github.com/mrjackyliang/sponsor-gated-support">
-    <h1>Sponsor Gated Support</h1>
+  <a href="https://mrjackyliang.github.io/sponsor-gated-support/">
+    <picture>
+      <img alt="Sponsor Gated Support" src="https://mrjackyliang.github.io/sponsor-gated-support/images/logo.svg" height="128">
+    </picture>
   </a>
+  <h1>Sponsor Gated Support</h1>
 <!-- nova-region-end: header -->
 <!-- nova-region: badges -->
   <a href="https://github.com/mrjackyliang/sponsor-gated-support/releases">

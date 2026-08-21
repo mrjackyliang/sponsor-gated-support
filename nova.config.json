@@ -101,10 +101,11 @@
     }
   ],
   "urls": {
-    "homepage": "https://github.com/mrjackyliang/sponsor-gated-support",
+    "homepage": "https://mrjackyliang.github.io/sponsor-gated-support/",
     "repository": "git+https://github.com/mrjackyliang/sponsor-gated-support.git",
     "bugs": "https://github.com/mrjackyliang/sponsor-gated-support/issues",
     "license": "https://github.com/mrjackyliang/sponsor-gated-support/blob/HEAD/LICENSE",
+    "logo": "https://mrjackyliang.github.io/sponsor-gated-support/images/logo.svg",
     "documentation": "https://mrjackyliang.github.io/sponsor-gated-support/",
     "fundSources": [
       "https://github.com/sponsors/mrjackyliang",
