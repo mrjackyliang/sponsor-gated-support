@@ -42,7 +42,7 @@ jobs:
     steps:
       - name: "Check sponsor status"
         id: "sponsor-gate"
-        uses: "mrjackyliang/sponsor-gated-support@v1.0.1"
+        uses: "mrjackyliang/sponsor-gated-support@v2"
         with:
           GITHUB_PERSONAL_ACCESS_TOKEN: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
           GITHUB_WORKFLOW_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

@@ -43,9 +43,7 @@ export const configuration = z.object({
     .transform((value) => value === 'true'),
   sponsorExemptFileLocation: z.string()
     .transform((value) => ((value === '') ? './SPONSOR_EXEMPT' : value)),
-  sponsorMinimum: z.number({
-    coerce: true,
-  }),
+  sponsorMinimum: z.coerce.number(),
 });
 
 /**
