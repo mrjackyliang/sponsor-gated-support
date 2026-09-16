@@ -1,5 +1,18 @@
 # sponsor-gated-support
 
+## 2.0.3 - 2026-09-16
+
+### UPDATED
+- Declared reviewed root dependency install scripts as denied so clean npm installs have an explicit trust policy.
+- Disabled Turbo caching for build and check tasks so repository commands no longer accumulate persistent Turbo cache artifacts.
+- Aligned workspace scripts, Vitest setup, TypeScript presets, and ESLint file policies with Nova 0.27.0, and replaced the local Markdown table formatter with Nova's built-in recipe.
+- Updated Nova and its Docusaurus preset to 0.27.0, TypeScript to 6.0.3, Zod to 4.4.3, and other pinned dependencies to compatible versions.
+- Normalized the package author URL to the canonical trailing-slash form.
+- Expanded Nova's GitHub repository sync settings for Actions, labels, security, topics, and sponsorships.
+
+### FIXED
+- Corrected documentation workflow examples to use the current v2 action tag instead of v1.0.1.
+
 ## 2.0.2 - 2026-08-21
 
 ### FIXED
