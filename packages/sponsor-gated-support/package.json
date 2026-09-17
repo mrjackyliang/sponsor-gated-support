@@ -1,6 +1,6 @@
 {
   "name": "sponsor-gated-support",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "A GitHub Action that reserves issue support for sponsors and recognized contributors who back your work",
   "keywords": [
     "actions",
@@ -65,7 +65,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@cbnventures/nova": "0.27.0",
+    "@cbnventures/nova": "0.27.1",
     "@github/local-action": "1.5.1",
     "@types/lodash": "4.17.25",
     "@types/node": "24.9.1",

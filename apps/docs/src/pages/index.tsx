@@ -20,7 +20,7 @@ import styles from './index.module.css';
  *
  * @constructor
  *
- * @since UNRELEASED
+ * @since 0.0.0
  */
 function Home() {
   return (

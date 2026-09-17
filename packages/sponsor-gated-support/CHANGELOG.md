@@ -1,5 +1,10 @@
 # sponsor-gated-support
 
+## 2.0.4 - 2026-09-16
+
+### UPDATED
+- Updated Nova and its Docusaurus preset to 0.27.1, and regenerated the publish workflow to use Node 24-ready build attestation and Corepack-managed npm.
+
 ## 2.0.3 - 2026-09-16
 
 ### UPDATED

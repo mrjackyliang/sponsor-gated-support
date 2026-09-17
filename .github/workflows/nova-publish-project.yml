@@ -51,7 +51,7 @@ jobs:
 
       - name: "Install packages"
         run: |
-          npm install -g npm@latest
+          corepack enable npm
           npm install
         working-directory: "${{ env.ROOT_DIR }}"
 
@@ -215,7 +215,7 @@ jobs:
 
       - name: "Attest build provenance"
         if: "${{ env.PUBLISH == 'true' }}"
-        uses: "actions/attest-build-provenance@v2"
+        uses: "actions/attest@v4"
         with:
           subject-path: "./packages/sponsor-gated-support/build/index.js"
 
