@@ -1,6 +1,6 @@
 {
   "name": "sponsor-gated-support",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "A GitHub Action that reserves issue support for sponsors and recognized contributors who back your work",
   "keywords": [
     "actions",
@@ -31,8 +31,7 @@
   },
   "exports": {
     ".": {
-      "default": "./build/index.js",
-      "require": "./build/index.js"
+      "default": "./build/index.js"
     }
   },
   "main": "./build/index.js",
@@ -60,12 +59,12 @@
   "dependencies": {
     "@actions/core": "1.10.1",
     "@actions/github": "6.0.0",
+    "@cbnventures/nova": "0.27.2",
     "json-to-graphql-query": "2.2.5",
     "lodash": "4.18.1",
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@cbnventures/nova": "0.27.1",
     "@github/local-action": "1.5.1",
     "@types/lodash": "4.17.25",
     "@types/node": "24.9.1",
