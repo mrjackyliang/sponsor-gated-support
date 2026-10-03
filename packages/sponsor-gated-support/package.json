@@ -1,6 +1,6 @@
 {
   "name": "sponsor-gated-support",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "A GitHub Action that reserves issue support for sponsors and recognized contributors who back your work",
   "keywords": [
     "actions",
@@ -47,7 +47,7 @@
     "check:types-config": "nova utility type-check --project tsconfig.config.json",
     "check:types-tests": "nova utility type-check --project tsconfig.tests.json",
     "check:test": "vitest run",
-    "build": "nova utility run-scripts --sequential 'build:*'",
+    "build": "nova utility run-scripts --sequential --node-env production 'build:*'",
     "build:reset": "shx rm -rf ./build",
     "build:ncc": "npx ncc build src/index.ts -o build --source-map --license licenses.txt",
     "start": "local-action run . src/index.ts .env",
@@ -59,7 +59,7 @@
   "dependencies": {
     "@actions/core": "1.10.1",
     "@actions/github": "6.0.0",
-    "@cbnventures/nova": "0.27.3",
+    "@cbnventures/nova": "0.28.0",
     "json-to-graphql-query": "2.2.5",
     "lodash": "4.18.1",
     "zod": "4.4.3"

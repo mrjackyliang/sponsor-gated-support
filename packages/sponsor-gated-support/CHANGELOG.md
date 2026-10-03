@@ -1,5 +1,11 @@
 # sponsor-gated-support
 
+## 2.0.7 - 2026-10-03
+
+### UPDATED
+- Updated Nova and its Docusaurus preset to 0.28.0, including the runtime-only Vitest resolution fix.
+- Assigned explicit child environments to development, production, build, and deployment script groups.
+
 ## 2.0.6 - 2026-09-23
 
 ### UPDATED
