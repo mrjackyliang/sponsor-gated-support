@@ -1,5 +1,14 @@
 # sponsor-gated-support
 
+## 2.0.8 - 2026-10-11
+
+### UPDATED
+- Updated Nova to 0.29.0 across the project, action package, and docs, plus the Docusaurus preset to 0.29.0 in docs.
+- Completed JavaScript, TypeScript, browser, Node.js, and Docusaurus preset coverage, and consolidated custom Nova lint rules into the shared rule bundle while preserving workspace-specific overrides.
+- Declared the root workspace as ESM and assigned Vitest setup type checking to the tests configuration.
+- Updated json-to-graphql-query to 2.3.0.
+- Recorded README badge and Node.js bug-report settings explicitly in Nova configuration.
+
 ## 2.0.7 - 2026-10-03
 
 ### UPDATED
