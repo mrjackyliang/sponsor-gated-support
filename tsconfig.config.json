@@ -16,7 +16,6 @@
   },
   "include": [
     "./eslint.config.mts",
-    "./vitest.config.mts",
-    "./vitest.setup.ts"
+    "./vitest.config.mts"
   ]
 }

@@ -134,7 +134,12 @@
         "color": "ffffff",
         "description": "This will not be worked on"
       }
-    ]
+    ],
+    "issueTemplate": {
+      "bugReportFields": [
+        "nodejs"
+      ]
+    }
   },
   "workflows": [
     {
@@ -190,6 +195,14 @@
     "fundSources": [
       "https://github.com/sponsors/mrjackyliang",
       "https://liang.nyc/paypal"
+    ]
+  },
+  "readme": {
+    "badges": [
+      "github-release",
+      "github-top-language",
+      "github-license",
+      "funding"
     ]
   },
   "workspaces": {
