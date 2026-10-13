@@ -1,5 +1,15 @@
 # sponsor-gated-support
 
+## 2.0.9 - 2026-10-12
+
+### UPDATED
+- Updated Nova and Docusaurus Preset Nova to 0.30.1.
+- Adopted role-based TypeScript preset layers.
+- Standardized root-owned tests under the shared project layout.
+
+### FIXED
+- Regenerated the action publishing workflow so every published version receives its own releases-branch commit even when bundled runtime bytes are unchanged.
+
 ## 2.0.8 - 2026-10-11
 
 ### UPDATED
