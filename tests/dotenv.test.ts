@@ -2,7 +2,7 @@ import { registerDotenvSuite } from '@cbnventures/nova/rules/vitest';
 import * as vitest from 'vitest';
 
 /**
- * Tests - Dotenv.
+ * Dotenv.
  *
  * This project self-checks its own `.env` / `.env.sample` quote convention
  * THROUGH the published kit. The suite logic lives in @cbnventures/nova/rules/vitest;

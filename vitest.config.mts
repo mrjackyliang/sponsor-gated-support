@@ -3,12 +3,15 @@ import { defineConfig } from 'vitest/config';
 /**
  * Vitest Configuration.
  *
+ * Wires root-owned conformance tests while each workspace retains its own
+ * independently configured test suite.
+ *
  * @since 0.21.0
  */
 export default defineConfig({
   test: {
-    setupFiles: ['./vitest.setup.ts'],
-    include: ['src/tests/**/*.test.ts'],
+    setupFiles: ['./tests/setup.ts'],
+    include: ['tests/**/*.test.ts'],
     globals: false,
     testTimeout: 30000, // 30 seconds.
     sequence: {

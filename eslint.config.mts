@@ -87,7 +87,7 @@ export default [
           ignoreFiles: [
             './eslint.config.mts',
             './vitest.config.mts',
-            './vitest.setup.ts',
+            './tests/setup.ts',
           ],
           knownNames: {},
           stripDirectories: ['types'],

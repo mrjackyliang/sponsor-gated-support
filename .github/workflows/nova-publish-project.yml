@@ -183,7 +183,8 @@ jobs:
           set -euo pipefail
           cd "$RUNNER_TEMP/release"
           git add -A
-          git commit -m "Release $TAG_NAME"
+          # Keep one release commit per published version even when the bundled bytes are unchanged.
+          git commit --allow-empty -m "Release $TAG_NAME"
           git push origin "releases" --force
 
       - name: "Force-retag semver and floating major"
