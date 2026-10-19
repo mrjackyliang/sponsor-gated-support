@@ -57,12 +57,12 @@ jobs:
 
       - name: "Check project"
         run: |
-          npx turbo run check --filter=// --filter=sponsor-gated-support --filter=sponsor-gated-support-docs --concurrency=2
+          npm run check
         working-directory: "${{ env.ROOT_DIR }}"
 
       - name: "Build project"
         run: |
-          npx turbo run build --filter=sponsor-gated-support --filter=sponsor-gated-support-docs --concurrency=2
+          npm run build:workspaces -- --workspace sponsor-gated-support --workspace sponsor-gated-support-docs
         working-directory: "${{ env.ROOT_DIR }}"
 
       - name: "Upload build artifacts (github-action/packages-sponsor-gated-support)"
@@ -84,7 +84,7 @@ jobs:
   publish-github-action-packages-sponsor-gated-support:
     needs: "build"
     runs-on: "ubuntu-latest"
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: "write"
       id-token: "write"
@@ -223,7 +223,7 @@ jobs:
   publish-github-pages-docusaurus-apps-docs:
     needs: "build"
     runs-on: "ubuntu-latest"
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: "read"
       pages: "write"

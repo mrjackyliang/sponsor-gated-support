@@ -7,7 +7,7 @@
 - **Project name:** Sponsor Gated Support (`sponsor-gated-support`)
 - **Description:** A GitHub Action designed to help project maintainers manage support requests in a way that encourages sponsorship and recognizes valuable contributors.
 - **Primary language:** TypeScript
-- **Framework / runtime:** GitHub Actions (Node.js 20 runtime via `runs.using: node20`), bundled with @vercel/ncc
+- **Framework / runtime:** GitHub Actions using the runtime declared in `action.yml`, bundled with `@vercel/ncc`
 
 ### Repository URL
 
@@ -21,31 +21,35 @@ sponsor-gated-support/
 |   |-- ISSUE_TEMPLATE/   - Bug report, feature request, and support request forms
 |   |-- workflows/        - Nova-generated GitHub Actions workflows (sponsor-check, lock-inactive, publish)
 |   `-- FUNDING.yml       - GitHub Sponsors and PayPal funding links
-|-- build/                - Committed ncc bundle the action runs (index.js, source map, licenses.txt)
+|-- apps/
+|   `-- docs/             - Docusaurus documentation workspace
 |-- conventions/          - Nova-generated coding convention files (do not edit)
-|-- src/                  - TypeScript source code
-|   |-- lib/              - Event handlers, Zod schemas, GraphQL utilities
-|   `-- types/            - TypeScript type definitions (.d.ts)
+|-- packages/
+|   `-- sponsor-gated-support/
+|       |-- build/        - Committed ncc bundle the action runs
+|       `-- src/          - Action source, tests, and type declarations
+|-- scripts/              - Root maintenance and Nova-linking scripts
+|-- tests/                - Root project-contract tests
 |-- .editorconfig         - Editor formatting rules
 |-- .env.sample           - Sample env file for local runs via @github/local-action
 |-- .gitignore            - Git ignore patterns (.env and package-lock.json are ignored)
 |-- action.yml            - GitHub Action metadata: inputs, output, runtime, branding
 |-- AGENTS.md             - Nova-generated agent entry point (do not edit)
 |-- CLAUDE.md             - Nova-generated agent entry point (do not edit)
-|-- eslint.config.js      - ESLint flat config
+|-- eslint.config.mts     - Root ESLint flat config
 |-- LICENSE               - MIT license
 |-- nova.config.json      - Nova project configuration
 |-- package.json          - Node.js manifest and scripts
 |-- PROJECT_RULES.md      - This file
 |-- README.md             - Project overview, workflow setup, variable reference, PAT guide
-|-- tsconfig.json         - TypeScript compiler configuration
+|-- tsconfig.*.json       - Root configuration, scripts, and test TypeScript projects
 `-- VISION.md             - Purpose, marketing copy, and glossary
 ```
 
 ## Source Structure
 
 ```
-src/
+packages/sponsor-gated-support/src/
 |-- index.ts       - Action entry point; calls runAction()
 |-- run.ts         - Orchestrator: loads config, context, and sponsors; logs grouped
 |                    output; dispatches by event name (issues / issue_comment)
@@ -67,40 +71,42 @@ src/
 
 ## Key Files
 
-| File                 | Purpose                                            | When to modify                                                      |
-|----------------------|----------------------------------------------------|---------------------------------------------------------------------|
-| `action.yml`         | Action metadata: inputs, defaults, output, runtime | Adding or changing inputs (keep README and `schema.ts` in sync)     |
-| `src/run.ts`         | Orchestrator and event dispatch                    | Supporting new event types                                          |
-| `src/lib/action.ts`  | Gating and moderation logic                        | Changing what happens on issue open/close or comment created/edited |
-| `src/lib/utility.ts` | GraphQL queries/mutations, config, sponsor fetch   | Adding GraphQL operations or changing sponsor collection            |
-| `src/lib/schema.ts`  | Zod schemas and input defaults                     | Changing input shape, defaults, or accepted payload fields          |
-| `src/types/*.d.ts`   | Per-function type aliases                          | Whenever an exported function signature changes                     |
-| `.env.sample`        | Local-run input template                           | Whenever inputs are added or renamed                                |
-| `package.json`       | Manifest                                           | Adding dependencies, changing scripts, bumping version              |
-| `tsconfig.json`      | TS config                                          | Changing compiler options or the `@/*` path alias                   |
-| `build/`             | Committed bundle consumers execute                 | Never by hand; regenerate with `npm run build` before every release |
+| File                                                | Purpose                                            | When to modify                                                  |
+|-----------------------------------------------------|----------------------------------------------------|-----------------------------------------------------------------|
+| `action.yml`                                        | Action metadata: inputs, defaults, output, runtime | Adding or changing inputs; keep docs and schemas aligned        |
+| `packages/sponsor-gated-support/src/run.ts`         | Orchestrator and event dispatch                    | Supporting new event types                                      |
+| `packages/sponsor-gated-support/src/lib/action.ts`  | Gating and moderation logic                        | Changing issue or comment behavior                              |
+| `packages/sponsor-gated-support/src/lib/utility.ts` | GraphQL operations, config, sponsor fetch          | Adding GitHub operations or changing sponsor collection         |
+| `packages/sponsor-gated-support/src/lib/schema.ts`  | Zod schemas and input defaults                     | Changing input shape, defaults, or payload fields               |
+| `packages/sponsor-gated-support/src/types/`         | Per-function type aliases                          | Whenever an exported function signature changes                 |
+| `packages/sponsor-gated-support/.env.sample`        | Local-run input template                           | Whenever inputs are added or renamed                            |
+| `packages/sponsor-gated-support/package.json`       | Deliverable manifest                               | Adding dependencies, changing scripts, or releasing             |
+| `packages/sponsor-gated-support/build/`             | Committed bundle consumers execute                 | Never by hand; regenerate with the package build before release |
+| `apps/docs/docusaurus.config.ts`                    | Documentation site configuration                   | Changing docs metadata, navigation, or deployment               |
 
 ## Build and Tooling
 
 ### Prerequisites
 
-| Tool       | Version                           | Purpose                                               |
-|------------|-----------------------------------|-------------------------------------------------------|
-| Node.js    | ^22 or ^24 (package.json engines) | Local development, builds, and local action runs      |
-| npm        | Bundled with Node.js              | Package manager (`postinstall` triggers a full build) |
-| Node.js 20 | Provided by the Actions runner    | Action runtime (`runs.using: node20` in `action.yml`) |
+| Tool           | Version source                  | Purpose                                            |
+|----------------|---------------------------------|----------------------------------------------------|
+| Node.js        | Root `package.json` `engines`   | Local development, builds, and local action runs   |
+| npm            | Root `package.json` package pin | Workspace-aware package manager                    |
+| Action runtime | Root `action.yml`               | Runtime used by consuming GitHub Actions workflows |
 
 ### Commands
 
-| Command               | What it does                                                                      |
-|-----------------------|-----------------------------------------------------------------------------------|
-| `npm install`         | Install all dependencies; `postinstall` runs the full build                       |
-| `npm start`           | Run the action locally via `@github/local-action` using `src/index.ts` and `.env` |
-| `npm run build`       | Full build: `build:reset` -> `build:ncc` (sequential)                             |
-| `npm run build:reset` | Delete the `./build` directory                                                    |
-| `npm run build:ncc`   | Bundle `src/index.ts` into `build/` with source map and `licenses.txt`            |
-| `npm run check`       | Full check: `check:lint` -> `check:types-*` -> `check:test` (sequential)          |
-| `npm run check:test`  | Run the Vitest test suite                                                         |
+| Command                                         | What it does                                                                         |
+|-------------------------------------------------|--------------------------------------------------------------------------------------|
+| `npm install`                                   | Install every workspace; package postinstall builds the action bundle                |
+| `npm run dev`                                   | Run development scripts across workspaces through Nova                               |
+| `npm run check`                                 | Run workspace checks, then root lint, type checks, and Vitest suites                 |
+| `npm run build`                                 | Build the action bundle and documentation site through Nova                          |
+| `npm run deploy`                                | Check and build the repository before generated publishing workflows run             |
+| `npm run clean`                                 | Remove workspace build output                                                        |
+| `npm run changelog`                             | Record, preview, or cut releases through Nova                                        |
+| `npm run recipes`                               | Apply the recipes configured in `nova.config.json`                                   |
+| `npm run dev --workspace sponsor-gated-support` | Run the action's TypeScript source locally through `@github/local-action` and `.env` |
 
 Tests run via `npm run check:test` (vitest run). There is no standalone `npm test` script; tests are part of the `check` pipeline.
 
@@ -108,11 +114,11 @@ Tests run via `npm run check:test` (vitest run). There is no standalone `npm tes
 
 In production, all settings arrive as action inputs through the workflow `with:` block, not environment variables. The exceptions and local-development variables are:
 
-| Variable                                      | Required               | Purpose                                                                                               |
-|-----------------------------------------------|------------------------|-------------------------------------------------------------------------------------------------------|
-| `GITHUB_REPOSITORY_OWNER`                     | Organization mode only | Provided by the Actions runner; `getSponsors()` throws if `IS_ORGANIZATION` is true and it is missing |
-| `INPUT_*` (local `.env` only)                 | No                     | Feed action inputs to `npm start` via `@github/local-action`; see `.env.sample` for the full list     |
-| `ACTIONS_RUNNER_DEBUG` / `ACTIONS_STEP_DEBUG` | No                     | Debug output toggles for local runs (in `.env.sample`)                                                |
+| Variable                                      | Required               | Purpose                                                                                                                               |
+|-----------------------------------------------|------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| `GITHUB_REPOSITORY_OWNER`                     | Organization mode only | Provided by the Actions runner; `getSponsors()` throws if `IS_ORGANIZATION` is true and it is missing                                 |
+| `INPUT_*` (local `.env` only)                 | No                     | Feed action inputs to `npm run dev --workspace sponsor-gated-support` via `@github/local-action`; see `.env.sample` for the full list |
+| `ACTIONS_RUNNER_DEBUG` / `ACTIONS_STEP_DEBUG` | No                     | Debug output toggles for local runs (in `.env.sample`)                                                                                |
 
 ## Workspace Rules
 
@@ -126,7 +132,7 @@ In production, all settings arrive as action inputs through the workflow `with:`
 | Type aliases           | Module_File_FunctionName_RoleSuffix   | `Lib_Utility_GetSponsors_Config`, `Lib_Utility_GetSponsors_Returns`, `Lib_Utility_LockIssue_NodeId` |
 | Webhook payload fields | snake_case (mirrors GitHub API)       | `node_id`, `author_association`                                                                     |
 | Local env vars         | `INPUT_` + action input name          | `INPUT_ISSUE_LABELS`                                                                                |
-| JSDoc                  | Every export documented with `@since` | `@since 1.0.0`                                                                                      |
+| JSDoc                  | Every export documented with `@since` | Use the release value stamped by Nova                                                               |
 
 ### Do / Don't
 
@@ -220,9 +226,9 @@ The documentation site lives at `apps/docs/` and is deployed to GitHub Pages via
 This action is distributed through the GitHub repository itself (it is not published to npm). Consumers pin a tag, and the runner executes the committed `build/index.js`.
 
 1. All changes committed, `git status --short` is clean.
-2. Bump `version` in `package.json` and update the pinned tag in the README usage example (`mrjackyliang/sponsor-gated-support@vX.Y.Z`).
-3. Run `npm run build` and commit the regenerated `build/` output; the tag must contain a bundle matching the source.
-4. Tag the commit (e.g. `v1.0.1`) and push commit and tag.
+2. Preview and cut the package release with `npm run changelog -- --release --dry-run`, then `npm run changelog -- --release`; generated documentation keeps usage references aligned.
+3. Run `npm run check` and `npm run build`; the tag must contain a committed action bundle matching the source.
+4. Commit the release result and tag it with the released package version, then push the commit and tag.
 5. Publish a GitHub Release for the tag.
 
 ### CI/CD Workflows
@@ -240,4 +246,4 @@ Three Nova-generated workflows live under `.github/workflows/`:
 | Environment           | URL / Identifier                                               | Purpose                                                 |
 |-----------------------|----------------------------------------------------------------|---------------------------------------------------------|
 | GitHub Releases       | https://github.com/mrjackyliang/sponsor-gated-support/releases | Versioned tags that consumers pin                       |
-| Consumer repositories | `uses: mrjackyliang/sponsor-gated-support@vX.Y.Z`              | Runs inside consumers' issue workflows on their runners |
+| Consumer repositories | `uses: mrjackyliang/sponsor-gated-support@<release-tag>`       | Runs inside consumers' issue workflows on their runners |

@@ -1,6 +1,6 @@
 {
   "name": "sponsor-gated-support",
-  "version": "2.0.9",
+  "version": "2.0.10",
   "description": "A GitHub Action that reserves issue support for sponsors and recognized contributors who back your work",
   "keywords": [
     "actions",
@@ -41,16 +41,17 @@
   ],
   "private": false,
   "scripts": {
-    "check": "nova utility run-scripts --sequential 'check:*'",
+    "dev": "nova utility run-scripts --parallel --node-env development \"dev:*\"",
+    "dev:local": "local-action run . src/index.ts .env",
+    "check": "nova utility run-scripts --sequential \"check:*\"",
     "check:lint": "eslint ./ --max-warnings=0",
     "check:types-app": "nova utility type-check --project tsconfig.json",
     "check:types-config": "nova utility type-check --project tsconfig.config.json",
     "check:types-tests": "nova utility type-check --project tsconfig.tests.json",
     "check:test": "vitest run",
-    "build": "nova utility run-scripts --sequential --node-env production 'build:*'",
+    "build": "nova utility run-scripts --sequential --node-env production \"build:*\"",
     "build:reset": "shx rm -rf ./build",
     "build:ncc": "npx ncc build src/index.ts -o build --source-map --license licenses.txt",
-    "start": "local-action run . src/index.ts .env",
     "postinstall": "npm run build"
   },
   "engines": {
@@ -59,7 +60,7 @@
   "dependencies": {
     "@actions/core": "1.10.1",
     "@actions/github": "6.0.0",
-    "@cbnventures/nova": "0.30.1",
+    "@cbnventures/nova": "0.33.0",
     "json-to-graphql-query": "2.3.0",
     "lodash": "4.18.1",
     "zod": "4.4.3"
