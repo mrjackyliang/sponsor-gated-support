@@ -1,5 +1,11 @@
 # sponsor-gated-support
 
+## 2.0.11 - 2026-11-01
+
+### UPDATED
+- Hardened action publishing with artifact boundary checks, sensitive-file rejection, hidden-file preservation, and fail-fast uploads.
+- Updated the action toolchain to Nova 0.38.0, added Node.js 26 compatibility, and aligned package orchestration and TypeScript roles with current Nova defaults.
+
 ## 2.0.10 - 2026-10-18
 
 ### UPDATED
