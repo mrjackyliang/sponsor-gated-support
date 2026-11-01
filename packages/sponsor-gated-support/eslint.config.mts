@@ -22,10 +22,6 @@ export default [
   ...langTypescript,
   ...runtimeNode,
   {
-    name: 'custom-ignores',
-    ignores: ['./build/**'],
-  },
-  {
     name: 'custom-tsconfig',
     files: [
       '**/*.cts',

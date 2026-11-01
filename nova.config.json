@@ -192,8 +192,9 @@
           "path": "./packages/sponsor-gated-support"
         },
         {
-          "to": "github-pages-docusaurus",
-          "path": "./apps/docs"
+          "to": "github-pages",
+          "path": "./apps/docs",
+          "artifact": "documentation"
         }
       ],
       "with": {
@@ -241,12 +242,26 @@
       "name": "sponsor-gated-support"
     }
   },
+  "artifacts": {
+    "documentation": {
+      "build": [
+        "./apps/docs"
+      ],
+      "sources": [
+        {
+          "from": "./apps/docs/build",
+          "to": "./"
+        }
+      ]
+    }
+  },
   "ignoreFiles": {
     "./.gitignore": {
       "bundles": [
         "nova"
       ],
       "patterns": [
+        "/assets/",
         "graphify-out/"
       ]
     }
@@ -553,8 +568,8 @@
     "lockStepVersioning": true,
     "runWorkspaces": {
       "cache": {
-        "directory": "./node_modules/.cache/nova/run-workspaces",
         "enabled": true,
+        "directory": "./node_modules/.cache/nova/run-workspaces",
         "scripts": [
           "build",
           "check"

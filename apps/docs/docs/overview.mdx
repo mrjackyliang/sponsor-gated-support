@@ -42,15 +42,15 @@ The action reads the issue's labels and compares them against your configured li
 
 ### Author Check
 
-For issues carrying a <Terminology title="a label that subjects an issue to gating" to="/docs/reference/terminology#gated-label">gated label</Terminology>, the action checks the author's relationship to the repository. Members, owners, contributors, collaborators, and users listed in the <Terminology title="username list that bypasses the sponsorship check" to="/docs/reference/terminology#exempt-file">exempt file</Terminology> pass immediately without a sponsorship lookup.
+For issues carrying a <Terminology title="a label that subjects an issue to gating" to="/docs/reference/terminology#gated-label">gated label</Terminology>, the action checks the author's relationship to the repository. Members, owners, contributors, collaborators, and users listed in the <Terminology title="username list that bypasses the sponsorship check" to="/docs/reference/terminology#exempt-file">exempt file</Terminology> pass without sponsoring you.
 
 ### Sponsor Check
 
-If the author isn't recognized as a contributor or exempt user, the action queries your GitHub Sponsors list through the GraphQL API. It pages through all <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology> and optionally filters for active-only status and a minimum <Terminology title="a GitHub Sponsors pricing tier" to="/docs/reference/terminology#tier">tier</Terminology> amount in cents.
+Each run first queries your GitHub Sponsors list through the GraphQL API, paging through all <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology> and optionally filtering for active-only status and a minimum <Terminology title="a GitHub Sponsors pricing tier" to="/docs/reference/terminology#tier">tier</Terminology> amount in cents. An author who isn't an <Terminology title="a member, owner, contributor, or collaborator" to="/docs/reference/terminology#insider">insider</Terminology> or exempt user passes only if they're on that list.
 
 ### Outcome
 
-- **<Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">Sponsor</Terminology> found** — The action posts your welcome message on the issue.
+- **Allowed** — A <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology>, an exempt user, or an <Terminology title="a member, owner, contributor, or collaborator" to="/docs/reference/terminology#insider">insider</Terminology> gets your welcome message, and the issue stays open.
 - **Not a <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology>** — The action posts your not-sponsor message, closes the issue, and locks it.
 
 After the initial check, the action continues to moderate the issue's lifecycle. Comments from non-<Terminology title="a member, owner, contributor, or collaborator" to="/docs/reference/terminology#insider">insiders</Terminology> on gated issues are automatically deleted, and gated issues are locked when closed.

@@ -16,6 +16,29 @@ GitHub issues are open to everyone, so project owners end up providing free, tim
 
 Sponsor Gated Support is a GitHub Action that helps project owners and contributors manage support requests in a way that encourages sponsorship and recognizes valuable work. When an issue with a gated label is opened, it checks the author against your live GitHub Sponsors list, your contributor roster, and an exempt file, then welcomes eligible users or posts a configurable message and closes and locks everyone else. Gating applies only to the issue labels you configure, so bug reports and feature requests can stay freely accessible.
 
+## Product Direction
+
+No additional product-direction constraints are currently documented beyond the project purpose and existing capabilities.
+
+## Product Design
+
+The current capabilities and intended experience are described by the value proposition and key features; domain terminology is defined in the glossary.
+
+## Positioning
+
+### Differentiators
+
+| This project                                                                                     | Alternatives                                                               |
+|--------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| Checks live GitHub Sponsors data on every issue event, including tier amount and active status   | Manual cross-checking of sponsor lists, or static allowlists that go stale |
+| Gates only the issue labels you configure; bug reports and feature requests stay open            | All-or-nothing approaches such as disabling issues entirely                |
+| Moderates through the workflow token, so actions appear as the github-actions bot and not as you | Manual closing and locking that shows up under the maintainer's name       |
+| Recognizes contributors and collaborators automatically, and supports an exempt file             | Sponsorship paywalls that ignore non-monetary contributions                |
+
+## Risks and Future
+
+No additional risks, open questions, roadmap commitments, or success criteria are currently documented.
+
 ## Marketing Copy
 
 ### Tagline
@@ -37,15 +60,6 @@ Sponsor Gated Support is a GitHub Action that helps project owners and contribut
 - **Lock on close** - With `ISSUE_LOCK_ON_CLOSE`, gated issues are locked as soon as they are closed.
 - **Customizable messaging** - Both the welcome message and the not-sponsor message are fully configurable workflow variables.
 
-### Differentiators
-
-| This project                                                                                     | Alternatives                                                               |
-|--------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
-| Checks live GitHub Sponsors data on every issue event, including tier amount and active status   | Manual cross-checking of sponsor lists, or static allowlists that go stale |
-| Gates only the issue labels you configure; bug reports and feature requests stay open            | All-or-nothing approaches such as disabling issues entirely                |
-| Moderates through the workflow token, so actions appear as the github-actions bot and not as you | Manual closing and locking that shows up under the maintainer's name       |
-| Recognizes contributors and collaborators automatically, and supports an exempt file             | Sponsorship paywalls that ignore non-monetary contributions                |
-
 ## Glossary
 
 | Term                        | Definition                                                                                                                                                                                                                                                 |
@@ -62,3 +76,7 @@ Sponsor Gated Support is a GitHub Action that helps project owners and contribut
 | Organization mode           | `IS_ORGANIZATION` set to `true`. Sponsors are queried on the organization named by `GITHUB_REPOSITORY_OWNER` instead of the token's own account.                                                                                                           |
 | Node ID                     | GitHub's GraphQL global identifier (`node_id`) for an issue or comment, used to target mutations (comment, close, lock, delete).                                                                                                                           |
 | result                      | The action's single output. `true` when handling completed or was intentionally skipped, `false` on any failure — including unsupported events, event-handler errors, and orchestrator-level errors (config parsing, sponsor fetch, or unexpected throws). |
+
+## Additional Vision Notes
+
+No additional vision notes are currently documented.

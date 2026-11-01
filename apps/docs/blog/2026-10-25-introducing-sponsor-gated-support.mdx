@@ -1,0 +1,85 @@
+---
+title: "Introducing Sponsor Gated Support for GitHub Issues"
+description: Sponsor Gated Support is a GitHub Action that keeps labeled support issues for your sponsors and contributors, and closes and locks the rest.
+slug: introducing-sponsor-gated-support
+authors:
+  - mrjackyliang
+keywords:
+  - sponsor gated support
+  - github action
+  - github sponsors
+  - support requests
+  - issue moderation
+  - contributor recognition
+tags:
+  - announcement
+  - github actions
+  - github sponsors
+---
+
+GitHub issues are open to everyone, so you can end up giving free, time-consuming support to people who have never sponsored or contributed to your project. GitHub has no built-in way to limit who opens a support request, so you either answer everything or moderate issues by hand.
+
+Sponsor Gated Support is my answer: a GitHub Action that keeps labeled support issues for the people who back your work.
+
+{/* truncate */}
+
+## Why I Built It
+
+Support takes time, and sponsorship offered my supporters nothing tangible in return. I wanted support requests reserved for the people funding the work, without closing and locking issues myself.
+
+The usual workarounds fall short. Static allowlists go stale, turning issues off shuts out bug reports too, and a sponsorship paywall ignores people who contribute in non-monetary ways.
+
+## What It Does
+
+When an issue with a gated label is opened, the action checks its author against your live GitHub Sponsors list, your contributors, and an exempt file. Out of the box, it:
+
+- **Welcomes the people who back your work** — Sponsors get your welcome message, and their issue stays open.
+- **Recognizes contributors** — Members, owners, contributors, and collaborators bypass the sponsorship requirement, and the exempt file grants access to anyone else you choose.
+- **Closes and locks the rest** — Everyone else gets your not-sponsor message, and the issue is closed and locked.
+- **Gates only the labels you choose** — Only issues with a label from `ISSUE_LABELS` (default: `support`) are gated, so bug reports and feature requests stay open to everyone.
+- **Keeps gated threads on topic** — Comments from anyone other than the opener, members, owners, contributors, or collaborators are deleted, and gated issues lock when they close.
+
+Both messages are yours to write, and you can require an active sponsorship and a minimum monthly tier amount. Organization-owned repositories work too, through the `IS_ORGANIZATION` mode.
+
+## Two Tokens, One Workflow
+
+A classic personal access token with the `read:org` and `read:user` scopes reads your sponsors. The workflow's built-in `GITHUB_TOKEN` moderates as the github-actions bot, not as you.
+
+Store the personal access token as a repository secret, then add a workflow that runs on issue and comment events:
+
+```yaml title=".github/workflows/sponsor-gated-support.yml"
+name: "Sponsor Gated Support"
+
+on:
+  issue_comment:
+    types:
+      - "created"
+      - "edited"
+  issues:
+    types:
+      - "opened"
+      - "closed"
+
+permissions:
+  issues: "write"
+
+jobs:
+  check-issues:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
+      - name: "Check support issues"
+        uses: "mrjackyliang/sponsor-gated-support@v2"
+        with:
+          GITHUB_PERSONAL_ACCESS_TOKEN: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
+          GITHUB_WORKFLOW_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+```
+
+The checkout step lets the action read your `SPONSOR_EXEMPT` file. The other nine inputs are optional, and the [Inputs](/docs/reference/inputs/) reference lists each default.
+
+## Where It Stands Today
+
+I first released Sponsor Gated Support in August 2024, and it's now at version 2.0.10 on the Node 24 Actions runtime. Workflows reference it by the `v2` tag.
+
+Head to [Usage](/docs/getting-started/usage/) to add it to your repository. If you still need the token, start with the [Personal Access Token](/docs/reference/personal-access-token/) guide.
