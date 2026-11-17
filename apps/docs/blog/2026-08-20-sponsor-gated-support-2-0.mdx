@@ -1,0 +1,49 @@
+---
+title: "Sponsor Gated Support 2.0 Arrives With Its Own Documentation"
+description: Version 2.0.0 rebuilds the action with test suites for every part of the sponsor check and launches a documentation site with a token guide.
+slug: sponsor-gated-support-2-0
+authors:
+  - mrjackyliang
+keywords:
+  - sponsor gated support
+  - github action
+  - documentation
+  - personal access token
+  - version 2
+tags:
+  - release
+  - documentation
+  - github actions
+---
+
+Sponsor Gated Support 2.0.0 is a rebuild of the action and the start of its documentation site. Every part of the sponsor check now has test coverage, and every input, output, and setup step has a page of its own.
+
+{/* truncate */}
+
+## Why It Matters
+
+The action decides who gets support and who gets their issue closed, so a wrong answer is visible to the people you care about most. Version 1 had no automated tests, and its setup lived in a single README.
+
+Version 2.0.0 adds both.
+
+## What's Included
+
+### Tests for Every Decision
+
+Test suites cover the sponsor check and inactive-thread handling, input parsing and defaults, sponsor lookup, exempt-file parsing, label filtering, and the run's success and failure paths.
+
+### A Documentation Site
+
+- **Overview** — How the label check, author check, and sponsor check lead to each outcome.
+- **Usage** — A complete workflow with the events and permissions it needs.
+- **Inputs and Outputs** — All 11 inputs with their defaults, and the `result` output.
+- **Personal Access Token** — Step-by-step setup for the token that reads your sponsors.
+- **Terminology** — Plain definitions for sponsors, insiders, gated labels, and the exempt file.
+
+### One Tag for Version 2
+
+Workflows reference the action as `mrjackyliang/sponsor-gated-support@v2` and get every 2.x release without editing their version.
+
+## Try It
+
+Start with the [Overview](/docs/overview/), then add the action with [Usage](/docs/getting-started/usage/).

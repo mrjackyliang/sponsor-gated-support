@@ -26,8 +26,8 @@ Exposes a single output that later workflow steps can read to decide what happen
 
 The `result` output resolves to one of two string values:
 
-- `"true"` — handling completed successfully, or the action intentionally skipped the event (e.g., the issue lacks a <Terminology title="a label that subjects an issue to gating" to="/docs/reference/terminology#gated-label">gated label</Terminology>, the comment belongs to the opener or an <Terminology title="a member, owner, contributor, or collaborator" to="/docs/reference/terminology#insider">insider</Terminology>, or the issue is already locked)
-- `"false"` — the payload was empty or invalid, the event action is unsupported, a required setting was disabled, or an operation (commenting, closing, locking, or deleting) failed
+- `"true"` — handling completed successfully, or the action intentionally skipped the event (e.g., the issue lacks a <Terminology title="Put this label on an issue and the sponsor check kicks in" to="/docs/reference/terminology#issues-and-labels">gated label</Terminology>, the comment belongs to the opener or an <Terminology title="Your own people, so they skip the sponsor check entirely" to="/docs/reference/terminology#authors-and-insiders">insider</Terminology>, or the issue is already locked). It also stays `"true"` when a non-sponsor's issue is locked even though posting the not-sponsor message or closing the issue failed.
+- `"false"` — the payload was empty or invalid, the event action is unsupported, a required setting was disabled, the issue or comment user data was missing, loading the configuration or sponsor list failed, or posting the welcome message, locking, or deleting a comment failed. If the not-sponsor message or the close fails, the action logs a warning and still locks the issue.
 
 The action handles two event types: `issues` (opened and closed) and `issue_comment` (created and edited). Each path sets `result` independently based on whether the operation succeeds, is intentionally skipped, or encounters an error.
 
@@ -48,8 +48,8 @@ jobs:
           GITHUB_WORKFLOW_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: "Notify on failure"
-        if: steps.sponsor-gate.outputs.result == 'false'
+        if: ${{ failure() && steps.sponsor-gate.outputs.result == 'false' }}
         run: echo "Sponsor Gated Support reported a failure."
 ```
 
-The `if` conditional evaluates the string value of `result`, so you can gate any follow-up step — a Slack message, an issue creation, or a repository dispatch — on whether the run succeeded.
+A `"false"` result also marks the step as failed, which stops later steps by default, so the `if` conditional includes `failure()` alongside the string value of `result`. That way you can gate any follow-up step — a Slack message, an issue creation, or a repository dispatch — on whether the run succeeded.

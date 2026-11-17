@@ -17,16 +17,16 @@ tags:
 
 import { Terminology } from '@cbnventures/docusaurus-preset-nova/blocks';
 
-Generate a GitHub <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">Personal Access Token</Terminology> (Classic) so the action can retrieve your <Terminology title="a sponsor whose sponsorship is currently active" to="/docs/reference/terminology#active-sponsor">active sponsors</Terminology> through the GitHub GraphQL API.
+Generate a GitHub <Terminology title="Your own token, used only to look up who sponsors you" to="/docs/reference/terminology#tokens-and-setup">Personal Access Token</Terminology> (Classic) so the action can retrieve your <Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsor</Terminology> list through the GitHub GraphQL API.
 
 ## Why a Separate Token?
 
 Sponsor Gated Support uses two tokens, each with a distinct role:
 
-- **<Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">Personal Access Token</Terminology>** — reads your <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology> list via the GraphQL API. This token carries your identity, which is why it needs the `read:org` and `read:user` scopes.
-- **<Terminology title="GitHub's automatic token used for issue moderation" to="/docs/reference/terminology#workflow-token">Workflow token</Terminology> (`secrets.GITHUB_TOKEN`)** — handles all issue moderation, including commenting, closing, and locking. Because GitHub generates this token automatically on each workflow run, moderation actions appear under the "github-actions" bot instead of your personal account.
+- **<Terminology title="Your own token, used only to look up who sponsors you" to="/docs/reference/terminology#tokens-and-setup">Personal Access Token</Terminology>** — reads your <Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsor</Terminology> list via the GraphQL API. This token carries your identity, which is why it needs the `read:org` and `read:user` scopes.
+- **<Terminology title="GitHub's built-in token; moderation shows as github-actions" to="/docs/reference/terminology#tokens-and-setup">Workflow token</Terminology> (`secrets.GITHUB_TOKEN`)** — handles all issue moderation, including commenting, closing, and locking. Because GitHub generates this token automatically on each workflow run, moderation actions appear under the "github-actions" bot instead of your personal account.
 
-Keeping the tokens separate means your <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">PAT</Terminology> never needs write access to issues, and moderation activity stays cleanly attributed to the bot.
+Keeping the tokens separate means your <Terminology title="Your own token, used only to look up who sponsors you" to="/docs/reference/terminology#tokens-and-setup">PAT</Terminology> never needs write access to issues, and moderation activity stays cleanly attributed to the bot.
 
 ## Creating the Token
 
@@ -51,7 +51,7 @@ The workflow references this secret as `secrets.PERSONAL_ACCESS_TOKEN`. You don'
 
 ## Organization Repositories
 
-If you're running the action on a repository owned by an organization, the organization needs to allow classic <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">PAT</Terminology> access. Without this setting, the token can't authenticate against the organization's data.
+If you're running the action on a repository owned by an organization, the organization needs to allow classic <Terminology title="Your own token, used only to look up who sponsors you" to="/docs/reference/terminology#tokens-and-setup">PAT</Terminology> access. Without this setting, the token can't authenticate against the organization's data.
 
 1. Open your organization's **Settings** tab.
 2. Navigate to **Third-party access** > **Personal access tokens** > **Settings**.
@@ -61,7 +61,9 @@ If you're running the action on a repository owned by an organization, the organ
 
 The token you create is deliberately read-only:
 
-- `read:org` lets the action check organization membership and sponsorship data.
-- `read:user` lets the action read <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology> relationships on your account.
+- `read:org` lets the action read the organization's sponsorship data.
+- `read:user` lets the action read <Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsor</Terminology> relationships on your account.
 
-It is recommended to avoid granting any write scopes. The action never uses this token for issue moderation — it always uses the separate <Terminology title="GitHub's automatic token used for issue moderation" to="/docs/reference/terminology#workflow-token">workflow token</Terminology> for commenting, closing, and locking, so moderation actions appear under the "github-actions" bot.
+It is recommended to avoid granting any write scopes. The action never uses this token for issue moderation — it always uses the separate <Terminology title="GitHub's built-in token; moderation shows as github-actions" to="/docs/reference/terminology#tokens-and-setup">workflow token</Terminology> for commenting, closing, and locking, so moderation actions appear under the "github-actions" bot.
+
+The run log doesn't expose what the token fetches. The `Sponsors` log group prints only `Sponsors loaded`, without sponsor logins, monthly amounts, or exempt-file entries.

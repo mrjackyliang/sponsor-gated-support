@@ -1,0 +1,57 @@
+---
+title: "Sponsor Gated Support 1.0 Reserves Support for Sponsors"
+description: Version 1.0.0 checks every labeled support issue against your live GitHub Sponsors list, keeps it open for backers, and closes and locks the rest.
+slug: sponsor-gated-support-1-0
+authors:
+  - mrjackyliang
+keywords:
+  - sponsor gated support
+  - github action
+  - github sponsors
+  - first release
+  - support issues
+tags:
+  - release
+  - github actions
+  - github sponsors
+---
+
+Sponsor Gated Support 1.0.0 shipped on August 15, 2024. The GitHub Action checks the author of every labeled support issue against your live GitHub Sponsors list, keeps the issue open for sponsors and contributors, and closes and locks it for everyone else.
+
+{/* truncate */}
+
+## Why It Matters
+
+GitHub lets anyone open an issue, and it has no setting that limits support requests to the people who fund a project. Maintainers either answered every request or sorted through them by hand.
+
+With 1.0.0, sponsorship comes with something concrete: a direct line for support.
+
+## What's Included
+
+### A Live Sponsor Check
+
+Each run reads your sponsors through the GitHub GraphQL API, so a new sponsor gets access right away and a lapsed one doesn't keep it.
+
+### Contributors Count Too
+
+Members, owners, contributors, and collaborators pass without sponsoring, and a `SPONSOR_EXEMPT` file grants access to anyone else you list.
+
+### Only the Labels You Choose
+
+Only issues with a label from `ISSUE_LABELS`, `support` by default, are gated, so bug reports and feature requests stay open to everyone.
+
+### Your Rules for Sponsorship
+
+Require an active sponsorship, set a minimum monthly tier in cents, and write your own welcome and not-sponsor messages.
+
+### Quiet Threads
+
+Comments from outsiders on gated issues are removed, and gated issues lock when they close.
+
+### Users and Organizations
+
+The `IS_ORGANIZATION` mode reads an organization's sponsors, so organization-owned repositories work the same way.
+
+## Try It
+
+[Usage](/docs/getting-started/usage/) adds the action to a repository, and [Personal Access Token](/docs/reference/personal-access-token/) creates the token that reads your sponsors.

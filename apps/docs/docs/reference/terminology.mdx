@@ -14,76 +14,58 @@ tags:
   - "terminology"
 ---
 
-Define the terms and concepts used throughout this documentation.
+import { Terminology } from '@cbnventures/docusaurus-preset-nova/blocks';
 
-## Support Request
+Short, practical definitions for the sponsor, label, and token terms used throughout the Sponsor Gated Support documentation. Tables list the term first, also known as, then the definition.
 
-An issue asking for help, marked with one of the gated labels configured in `ISSUE_LABELS` (default: `support`). Also called a "support ticket."
+:::tip[Glossary Terms]
+Throughout the docs, you will see <Terminology title="A quick reminder, right where you read it" to="/docs/reference/terminology">highlighted terms</Terminology> with a dotted underline. Hover over any of them for a quick reminder of what they mean, or click to jump to the full definition.
+:::
 
-## Gated Label
+## Issues and Labels
 
-A label configured in `ISSUE_LABELS` that subjects an issue to sponsor-gating, comment moderation, and lock-on-close when applied.
+| Term                | Also known as  | Definition                                                                                                                         |
+|---------------------|----------------|------------------------------------------------------------------------------------------------------------------------------------|
+| **support request** | support ticket | An issue asking for help, marked with one of the gated labels configured in `ISSUE_LABELS` (default: `support`).                   |
+| **gated label**     | `ISSUE_LABELS` | A label configured in `ISSUE_LABELS` that subjects an issue to sponsor-gating, comment moderation, and lock-on-close when applied. |
+| **label scoping**   | —              | Restricts gating to only the issue labels listed in `ISSUE_LABELS`, so other issue types remain ungated.                           |
 
-## Label Scoping
+## Sponsors and Eligibility
 
-Restricts gating to only the issue labels listed in `ISSUE_LABELS`, so other issue types remain ungated.
+| Term                | Also known as         | Definition                                                                                                                                                                       |
+|---------------------|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **sponsor**         | —                     | A user or organization sponsoring the repository owner through GitHub Sponsors, fetched live via the GraphQL `sponsorshipsAsMaintainer` query.                                   |
+| **active sponsor**  | `SPONSOR_ACTIVE_ONLY` | A sponsor whose sponsorship is currently active. Setting `SPONSOR_ACTIVE_ONLY` to `true` limits gating checks to active sponsorships only.                                       |
+| **tier**            | —                     | A GitHub Sponsors pricing tier. Its `monthlyPriceInCents` value is compared against the sponsor minimum to determine eligibility.                                                |
+| **sponsor minimum** | `SPONSOR_MINIMUM`     | The minimum amount in cents. Sponsors whose tier `monthlyPriceInCents` falls below this value are treated as non-sponsors.                                                       |
+| **exempt file**     | `SPONSOR_EXEMPT`      | A newline-delimited list of GitHub usernames in the consumer repository (default path: `./SPONSOR_EXEMPT`). Users listed here are treated as sponsors without requiring payment. |
 
-## Sponsor
+## Authors and Insiders
 
-A user or organization sponsoring the repository owner through GitHub Sponsors, fetched live via the GraphQL `sponsorshipsAsMaintainer` query.
+| Term                   | Also known as        | Definition                                                                                                                                                             |
+|------------------------|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **author association** | `author_association` | GitHub's relationship field on issues and comments (`OWNER`, `MEMBER`, `CONTRIBUTOR`, `COLLABORATOR`, `NONE`, etc.). Insider associations bypass gating automatically. |
+| **insider**            | —                    | A user whose author association is `OWNER`, `MEMBER`, `CONTRIBUTOR`, or `COLLABORATOR`. Insiders bypass sponsor gating and comment moderation automatically.           |
 
-## Active Sponsor
+## Moderation
 
-A sponsor whose sponsorship is currently active. Setting `SPONSOR_ACTIVE_ONLY` to `true` limits gating checks to active sponsorships only.
+| Term                   | Also known as           | Definition                                                                                                                             |
+|------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| **comment moderation** | `ISSUE_LIMIT_COMMENTER` | Restricts comments on gated issues to the opener and insiders when set to `true`. Comments from anyone else are automatically deleted. |
+| **lock on close**      | `ISSUE_LOCK_ON_CLOSE`   | Automatically locks a gated issue when it is closed, when set to `true`.                                                               |
 
-## Consumer Repository
+## Tokens and Setup
 
-The repository that installs and runs this action, as distinct from the action's own source repository.
+| Term                      | Also known as     | Definition                                                                                                                                                   |
+|---------------------------|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **consumer repository**   | —                 | The repository that installs and runs this action, as distinct from the action's own source repository.                                                      |
+| **personal access token** | PAT               | A classic `ghp_` token with `read:org` and `read:user` scopes, used only to fetch sponsor data via `GITHUB_PERSONAL_ACCESS_TOKEN`.                           |
+| **workflow token**        | `GITHUB_TOKEN`    | The `ghs_` token GitHub generates per workflow run (`secrets.GITHUB_TOKEN`), used for all issue moderation so actions appear under the "github-actions" bot. |
+| **organization mode**     | `IS_ORGANIZATION` | Queries sponsors on the organization named by `GITHUB_REPOSITORY_OWNER` instead of the token owner's personal account, when set to `true`.                   |
 
-## Exempt File
+## Action Internals
 
-A newline-delimited list of GitHub usernames stored in the consumer repository (default path: `./SPONSOR_EXEMPT`). Users listed here are treated as sponsors without requiring payment.
-
-## Sponsor Minimum
-
-The `SPONSOR_MINIMUM` amount in cents. Sponsors whose tier `monthlyPriceInCents` falls below this value are treated as non-sponsors.
-
-## Tier
-
-A GitHub Sponsors pricing tier. Its `monthlyPriceInCents` value is compared against the sponsor minimum to determine eligibility.
-
-## Author Association
-
-GitHub's relationship field on issues and comments (`OWNER`, `MEMBER`, `CONTRIBUTOR`, `COLLABORATOR`, `NONE`, etc.). Insider associations bypass gating automatically.
-
-## Insider
-
-A user whose GitHub author association is `OWNER`, `MEMBER`, `CONTRIBUTOR`, or `COLLABORATOR`. Insiders bypass sponsor gating and comment moderation automatically.
-
-## Comment Moderation
-
-Enabled by setting `ISSUE_LIMIT_COMMENTER` to `true`, restricts comments on gated issues to the opener and insiders. Comments from anyone else are automatically deleted.
-
-## Lock on Close
-
-Enabled by setting `ISSUE_LOCK_ON_CLOSE` to `true`, automatically locks a gated issue when it is closed.
-
-## Personal Access Token (PAT)
-
-A classic `ghp_` token with `read:org` and `read:user` scopes, used only to fetch sponsor data via `GITHUB_PERSONAL_ACCESS_TOKEN`.
-
-## Workflow Token
-
-The `ghs_` token GitHub generates per workflow run (`secrets.GITHUB_TOKEN`), used for all issue moderation so actions appear under the "github-actions" bot.
-
-## Organization Mode
-
-Enabled by setting `IS_ORGANIZATION` to `true`. Sponsors are queried on the organization named by `GITHUB_REPOSITORY_OWNER` instead of the token owner's personal account.
-
-## Node ID
-
-GitHub's GraphQL global identifier (`node_id`) for an issue or comment, used to target mutations such as commenting, closing, locking, and deleting.
-
-## Result Output
-
-The action's single output. Set to `true` when handling completed or was intentionally skipped, or `false` on any failure.
+| Term              | Also known as | Definition                                                                                                                                                                 |
+|-------------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **node ID**       | `node_id`     | GitHub's GraphQL global identifier for an issue or comment, used to target mutations such as commenting, closing, locking, and deleting.                                   |
+| **result output** | `result`      | The action's single output. Set to `true` when handling completed or was intentionally skipped, or `false` when the run fails. Warnings logged on the way don't change it. |

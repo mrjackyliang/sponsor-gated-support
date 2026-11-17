@@ -1,34 +1,7 @@
 {
   "name": "sponsor-gated-support",
-  "version": "2.0.11",
-  "description": "A GitHub Action that reserves issue support for sponsors and recognized contributors who back your work",
-  "keywords": [
-    "actions",
-    "github-sponsors",
-    "github-sponsors-action",
-    "patreon",
-    "customer-service"
-  ],
+  "version": "2.0.12",
   "license": "MIT",
-  "homepage": "https://mrjackyliang.github.io/sponsor-gated-support/",
-  "bugs": {
-    "email": "bugs@mrjackyliang.com",
-    "url": "https://github.com/mrjackyliang/sponsor-gated-support/issues"
-  },
-  "author": {
-    "name": "Jacky Liang",
-    "email": "hello@mrjackyliang.com",
-    "url": "https://www.mrjackyliang.com/"
-  },
-  "funding": [
-    "https://github.com/sponsors/mrjackyliang",
-    "https://liang.nyc/paypal"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mrjackyliang/sponsor-gated-support.git",
-    "directory": "packages/sponsor-gated-support"
-  },
   "exports": {
     ".": {
       "default": "./build/index.js"
@@ -39,7 +12,7 @@
   "files": [
     "./build"
   ],
-  "private": false,
+  "private": true,
   "scripts": {
     "dev": "nova utility run-scripts --parallel --node-env development \"dev:*\"",
     "dev:local": "local-action run . src/index.ts .env",
@@ -60,7 +33,7 @@
   "dependencies": {
     "@actions/core": "1.10.1",
     "@actions/github": "6.0.0",
-    "@cbnventures/nova": "0.38.0",
+    "@cbnventures/nova": "0.44.0",
     "json-to-graphql-query": "2.3.0",
     "lodash": "4.18.1",
     "zod": "4.4.3"

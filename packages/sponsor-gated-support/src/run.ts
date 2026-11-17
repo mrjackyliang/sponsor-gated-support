@@ -61,7 +61,7 @@ export async function runAction(): Run_RunAction_Returns {
     // Sponsors logs.
     core.startGroup('Sponsors');
 
-    core.info(util.inspect(sponsors, false, null, true));
+    core.info('Sponsors loaded');
 
     core.endGroup();
 

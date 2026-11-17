@@ -165,6 +165,33 @@ describe('runAction', () => {
     return;
   });
 
+  it('does not log GitHub or exempt sponsor data', async () => {
+    // @ts-expect-error Partial Context is sufficient for the properties runAction reads.
+    vi.mocked(getContext, true).mockReturnValue(baseIssuesContext);
+
+    vi.mocked(getSponsors).mockResolvedValue([{
+      type: 'github-api',
+      login: 'privateSponsorLogin',
+      amount: 73429,
+    }]);
+
+    vi.mocked(getSponsorsExempt).mockReturnValue([{
+      type: 'exempt-file',
+      login: 'privateExemptLogin',
+      amount: null,
+    }]);
+
+    await runAction();
+
+    expect(core.info).not.toHaveBeenCalledWith(expect.stringContaining('privateSponsorLogin'));
+
+    expect(core.info).not.toHaveBeenCalledWith(expect.stringContaining('73429'));
+
+    expect(core.info).not.toHaveBeenCalledWith(expect.stringContaining('privateExemptLogin'));
+
+    return;
+  });
+
   it('catches Error instances and calls setFailed with message', async () => {
     vi.mocked(getSponsors).mockRejectedValue(new Error('Config parse failure'));
 

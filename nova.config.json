@@ -162,7 +162,7 @@
         "issue-comment",
         "issues"
       ],
-      "runsOn": "ubuntu-latest",
+      "runsOn": "ubuntu-24.04",
       "timeoutMinutes": 5
     },
     {
@@ -171,7 +171,7 @@
       "triggers": [
         "schedule-weekly"
       ],
-      "runsOn": "ubuntu-latest",
+      "runsOn": "ubuntu-24.04",
       "timeoutMinutes": 5
     },
     {
@@ -180,7 +180,7 @@
       "triggers": [
         "release"
       ],
-      "runsOn": "ubuntu-latest",
+      "runsOn": "ubuntu-24.04",
       "timeoutMinutes": 15,
       "build": [
         "./packages/sponsor-gated-support",
@@ -227,19 +227,19 @@
   },
   "workspaces": {
     "./": {
+      "name": "sponsor-gated-support-project",
       "role": "project",
-      "policy": "freezable",
-      "name": "sponsor-gated-support-project"
+      "policy": "freezable"
     },
     "./apps/docs": {
+      "name": "sponsor-gated-support-docs",
       "role": "docs",
-      "policy": "freezable",
-      "name": "sponsor-gated-support-docs"
+      "policy": "freezable"
     },
     "./packages/sponsor-gated-support": {
+      "name": "sponsor-gated-support",
       "role": "package",
-      "policy": "distributable",
-      "name": "sponsor-gated-support"
+      "policy": "trackable"
     }
   },
   "artifacts": {

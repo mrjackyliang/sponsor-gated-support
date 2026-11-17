@@ -57,6 +57,23 @@ describe('configuration', () => {
     return;
   });
 
+  it('applies the documented defaults when boolean inputs are empty', () => {
+    expect(configuration.parse({
+      ...baseInput,
+      issueLimitCommenter: '',
+      issueLockOnClose: '',
+      isOrganization: '',
+      sponsorActiveOnly: '',
+    })).toMatchObject({
+      issueLimitCommenter: true,
+      issueLockOnClose: true,
+      isOrganization: false,
+      sponsorActiveOnly: true,
+    });
+
+    return;
+  });
+
   it('coerces the sponsor minimum into a number', () => {
     expect(configuration.parse({
       ...baseInput,

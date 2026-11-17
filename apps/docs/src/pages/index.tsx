@@ -2,7 +2,8 @@ import {
   BlogPreview,
   Canvas,
   Features,
-  Stats,
+  Spotlight,
+  WorkflowRunFrame,
 } from '@cbnventures/docusaurus-preset-nova/blocks';
 
 import Head from '@docusaurus/Head';
@@ -19,7 +20,7 @@ import type { Pages_Index_Home_Returns } from '../types/pages/index.d.ts';
  * Pages - Home.
  *
  * Root landing page that composes the hero header, feature grid,
- * stats section, and blog preview using theme blocks.
+ * and blog preview using theme blocks.
  *
  * @constructor
  *
@@ -71,7 +72,7 @@ function Home(): Pages_Index_Home_Returns {
             <div className={`nova-hero-actions ${styles['heroActions']}`}>
               <Link
                 className="nova-cta-primary"
-                to="/docs/overview/"
+                to="/docs/getting-started/usage/"
               >
                 {translate({
                   id: 'home.hero.ctaLabel',
@@ -81,11 +82,11 @@ function Home(): Pages_Index_Home_Returns {
               </Link>
               <Link
                 className="nova-cta-secondary"
-                to="https://github.com/mrjackyliang/sponsor-gated-support"
+                to="/docs/overview/"
               >
                 {translate({
                   id: 'home.hero.secondaryCtaLabel',
-                  message: 'View on GitHub',
+                  message: 'Learn More',
                   description: 'Front page hero secondary call-to-action button label',
                 })}
               </Link>
@@ -210,51 +211,85 @@ function Home(): Pages_Index_Home_Returns {
             },
           ]}
         />
-        <Stats
+        <Spotlight
+          surface="alt"
           heading={translate({
-            id: 'home.stats.heading',
-            message: 'By the Numbers',
-            description: 'Front page Stats section heading',
+            id: 'home.run.heading',
+            message: 'See It Run',
+            description: 'Front page heading above the GitHub Actions run example',
           })}
-          items={[
-            {
-              value: '3',
-              label: translate({
-                id: 'home.stats.accessTiers.label',
-                message: 'Access tiers',
-                description: 'Front page Stats label for access tiers count',
-              }),
-              color: 'primary',
-            },
-            {
-              value: '11',
-              label: translate({
-                id: 'home.stats.configurableInputs.label',
-                message: 'Configurable inputs',
-                description: 'Front page Stats label for configurable inputs count',
-              }),
-              color: 'accent',
-            },
-            {
-              value: '2',
-              label: translate({
-                id: 'home.stats.tokens.label',
-                message: 'Tokens for separation',
-                description: 'Front page Stats label for tokens count',
-              }),
-              color: 'primary',
-            },
-            {
-              value: '0',
-              label: translate({
-                id: 'home.stats.manualModeration.label',
-                message: 'Manual moderation',
-                description: 'Front page Stats label for manual moderation needed',
-              }),
-              color: 'accent',
-            },
-          ]}
-        />
+        >
+          <p className="nova-section-description">
+            {translate({
+              id: 'home.run.description',
+              message: 'When someone who isn\'t a sponsor opens an issue, the job log shows the reply, the close, and the lock as they happen.',
+              description: 'Front page description of the GitHub Actions run example',
+            })}
+          </p>
+          <WorkflowRunFrame
+            workflow="Check Sponsor Gated Issues (sponsor-check)"
+            title="Analyzing issue #131"
+            runNumber={87}
+            label={translate({
+              id: 'home.run.label',
+              message: 'A GitHub Actions run of Sponsor Gated Support that replied to, closed, and locked an issue from a non-sponsor',
+              description: 'Accessible label for the GitHub Actions run example',
+            })}
+            jobs={[{
+              name: 'check-issues',
+              summary: 'succeeded 5 minutes ago in 14s',
+              steps: [
+                {
+                  name: 'Set up job',
+                  duration: '1s',
+                },
+                {
+                  name: 'Checkout repository',
+                  duration: '1s',
+                },
+                {
+                  name: 'Check support issues',
+                  duration: '9s',
+                  log: [
+                    {
+                      title: 'Run mrjackyliang/sponsor-gated-support@v2',
+                      hiddenLines: 24,
+                    },
+                    {
+                      title: 'Configuration',
+                      hiddenLines: 13,
+                    },
+                    {
+                      title: 'Context',
+                      hiddenLines: 287,
+                    },
+                    {
+                      title: 'Sponsors',
+                      lines: ['Sponsors loaded'],
+                    },
+                    {
+                      title: 'Running',
+                      lines: [
+                        'Running tasks for when an issue is open',
+                        'Adding issue comment based on "ISSUE_MESSAGE_NOT_SPONSOR"',
+                        'Closing issue',
+                        'Locking issue',
+                      ],
+                    },
+                  ],
+                },
+                {
+                  name: 'Post Checkout repository',
+                  duration: '0s',
+                },
+                {
+                  name: 'Complete job',
+                  duration: '0s',
+                },
+              ],
+            }]}
+          />
+        </Spotlight>
         <BlogPreview
           heading={translate({
             id: 'home.blogPreview.heading',
@@ -263,11 +298,12 @@ function Home(): Pages_Index_Home_Returns {
           })}
           description={translate({
             id: 'home.blogPreview.description',
-            message: 'Release notes, setup guides, and notes on reserving support for sponsors.',
+            message: 'Launches, milestones, and what\'s new in Sponsor Gated Support.',
             description: 'Front page Blog Preview section description',
           })}
           auto={true}
           limit={3}
+          sort="newest"
         />
       </main>
     </Layout>

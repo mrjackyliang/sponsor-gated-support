@@ -18,29 +18,33 @@ export const configuration = z.object({
     .transform((value) => value.split(',').map((v) => v.trim()))
     .transform((value) => value.filter((v) => v !== '')),
   issueLimitCommenter: z.enum([
+    '',
     'true',
     'false',
   ])
-    .transform((value) => value === 'true'),
+    .transform((value) => ((value === '') ? true : value === 'true')),
   issueLockOnClose: z.enum([
+    '',
     'true',
     'false',
   ])
-    .transform((value) => value === 'true'),
+    .transform((value) => ((value === '') ? true : value === 'true')),
   issueMessageNotSponsor: z.string()
     .transform((value) => ((value === '') ? 'Apologies! Only sponsoring users are allowed to open issues. Please sponsor the owner of this repository, then try again.' : value)),
   issueMessageWelcome: z.string()
     .transform((value) => ((value === '') ? 'Thank you for your support! We appreciate your sponsorship and are here to help. We will review your issue and get back to you as soon as possible.' : value)),
   isOrganization: z.enum([
+    '',
     'true',
     'false',
   ])
-    .transform((value) => value === 'true'),
+    .transform((value) => ((value === '') ? false : value === 'true')),
   sponsorActiveOnly: z.enum([
+    '',
     'true',
     'false',
   ])
-    .transform((value) => value === 'true'),
+    .transform((value) => ((value === '') ? true : value === 'true')),
   sponsorExemptFileLocation: z.string()
     .transform((value) => ((value === '') ? './SPONSOR_EXEMPT' : value)),
   sponsorMinimum: z.coerce.number(),

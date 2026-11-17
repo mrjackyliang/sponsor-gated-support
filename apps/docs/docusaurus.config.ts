@@ -23,7 +23,7 @@ const config: DocusaurusNovaConfig = {
 
   // Deployment.
   url: identity['url'] ?? '',
-  baseUrl: identity['baseUrl'] ?? '',
+  baseUrl: identity['baseUrl'] ?? '/',
   organizationName: identity['organizationName'],
   projectName: identity['projectName'],
   deploymentBranch: undefined,
@@ -205,19 +205,25 @@ const config: DocusaurusNovaConfig = {
             description: 'Release notes, setup guides, and notes on reserving support for the sponsors and contributors who back your work.',
           },
         },
-        pages: undefined,
+        pages: {
+          editUrl: 'https://github.com/mrjackyliang/sponsor-gated-support/tree/main/apps/docs/',
+          showLastUpdateTime: true,
+          showLastUpdateAuthor: true,
+        },
         sitemap: {
           lastmod: 'date',
           changefreq: 'weekly',
           priority: 0.5,
-          ignorePatterns: ['**/docs/tags/**'],
+          ignorePatterns: [`${identity['baseUrl'] ?? '/'}docs/tags/**`],
           filename: 'sitemap.xml',
         },
       },
 
       // Analytics.
       analytics: {
-        gtm: undefined,
+        gtm: {
+          containerId: 'GTM-NJN3C25S',
+        },
       },
 
       // Search.
@@ -286,17 +292,30 @@ const config: DocusaurusNovaConfig = {
       hideOnScroll: false,
       items: [
         {
-          label: 'Overview',
+          label: 'Docs',
           position: 'left',
-          type: 'doc',
-          docId: 'overview',
+          type: 'dropdown',
           icon: 'lucide:book-open',
+          items: [
+            {
+              label: 'Overview',
+              to: '/docs/overview/',
+              icon: 'lucide:rocket',
+              activeBaseRegex: '^/docs/(overview/|getting-started/|category/getting-started/|tags/)',
+            },
+            {
+              label: 'Reference',
+              to: '/docs/reference/inputs/',
+              icon: 'lucide:library',
+              activeBaseRegex: '^/docs/(reference/|category/reference/)',
+            },
+          ],
         },
         {
-          label: 'Usage',
+          label: 'Quick Start',
           position: 'left',
-          type: 'doc',
-          docId: 'getting-started/usage',
+          type: undefined,
+          to: '/docs/getting-started/usage/',
           icon: 'lucide:play',
         },
         {
@@ -307,11 +326,22 @@ const config: DocusaurusNovaConfig = {
           icon: 'lucide:pen-line',
         },
         {
-          label: 'Sponsor',
-          position: 'right',
-          type: undefined,
-          href: 'https://github.com/sponsors/mrjackyliang',
-          icon: 'lucide:heart',
+          label: 'Resources',
+          position: 'left',
+          type: 'dropdown',
+          icon: 'lucide:life-buoy',
+          items: [
+            {
+              label: 'Changelog',
+              href: 'https://github.com/mrjackyliang/sponsor-gated-support/releases',
+              icon: 'lucide:history',
+            },
+            {
+              label: 'Report an Issue',
+              href: 'https://github.com/mrjackyliang/sponsor-gated-support/issues',
+              icon: 'lucide:bug',
+            },
+          ],
         },
       ],
     },
@@ -384,45 +414,59 @@ const config: DocusaurusNovaConfig = {
             href: '/docs/overview/',
           },
           {
-            label: 'Usage',
-            href: '/docs/getting-started/usage/',
-          },
-          {
-            label: 'Inputs',
+            label: 'Reference',
             href: '/docs/reference/inputs/',
           },
-          {
-            label: 'Outputs',
-            href: '/docs/reference/outputs/',
-          },
-          {
-            label: 'Personal Access Token',
-            href: '/docs/reference/personal-access-token/',
-          },
         ],
-        project: [
+        resources: [
           {
             label: 'Blog',
             href: '/blog/',
           },
           {
-            label: 'GitHub',
-            href: 'https://github.com/mrjackyliang/sponsor-gated-support',
+            label: 'Changelog',
+            href: 'https://github.com/mrjackyliang/sponsor-gated-support/releases',
           },
           {
             label: 'Report an Issue',
             href: 'https://github.com/mrjackyliang/sponsor-gated-support/issues',
           },
+          {
+            label: 'Source Code',
+            href: 'https://github.com/mrjackyliang/sponsor-gated-support',
+          },
+        ],
+        project: [
+          {
+            label: 'Sponsor',
+            href: 'https://github.com/sponsors/mrjackyliang',
+          },
+          {
+            label: 'GitHub Actions',
+            href: 'https://docs.github.com/en/actions',
+          },
+          {
+            label: 'GitHub Sponsors',
+            href: 'https://docs.github.com/en/sponsors',
+          },
+          {
+            label: 'Other Projects',
+            href: 'https://www.mrjackyliang.com/work/',
+          },
         ],
         legal: [{
           label: 'License',
-          href: 'https://github.com/mrjackyliang/sponsor-gated-support/blob/main/LICENSE',
+          href: 'https://github.com/mrjackyliang/sponsor-gated-support/blob/HEAD/LICENSE',
         }],
       },
       layout: {
         docs: {
           title: 'Docs',
           section: 'docs',
+        },
+        resources: {
+          title: 'Resources',
+          section: 'resources',
         },
         project: {
           title: 'Project',
@@ -435,9 +479,39 @@ const config: DocusaurusNovaConfig = {
       },
       socialLinks: [
         {
+          icon: 'ri:facebook-fill',
+          href: 'https://www.facebook.com/jackyliangofficial',
+          label: 'Facebook',
+        },
+        {
+          icon: 'ri:twitter-x-fill',
+          href: 'https://x.com/mrjackyliang',
+          label: 'X',
+        },
+        {
+          icon: 'ri:youtube-fill',
+          href: 'https://www.youtube.com/@mrjackyliang',
+          label: 'YouTube',
+        },
+        {
+          icon: 'ri:instagram-fill',
+          href: 'https://www.instagram.com/mrjackyliang/',
+          label: 'Instagram',
+        },
+        {
           icon: 'ri:github-fill',
           href: 'https://github.com/mrjackyliang',
           label: 'GitHub',
+        },
+        {
+          icon: 'ri:linkedin-fill',
+          href: 'https://www.linkedin.com/in/mrjackyliang/',
+          label: 'LinkedIn',
+        },
+        {
+          icon: 'ri:reddit-fill',
+          href: 'https://www.reddit.com/user/mrjackyliang/',
+          label: 'Reddit',
         },
         {
           icon: 'ri:heart-fill',
@@ -448,8 +522,8 @@ const config: DocusaurusNovaConfig = {
       copyright: identity['copyright'],
       credit: true,
       cta: {
-        label: 'View on GitHub',
-        href: 'https://github.com/mrjackyliang/sponsor-gated-support',
+        label: 'Ready to gate support behind Sponsors?',
+        href: '/docs/getting-started/usage/',
       },
     },
   },

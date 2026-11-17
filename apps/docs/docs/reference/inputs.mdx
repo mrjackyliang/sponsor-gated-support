@@ -17,36 +17,38 @@ tags:
 
 import { Terminology } from '@cbnventures/docusaurus-preset-nova/blocks';
 
-Configure how Sponsor Gated Support gates issues, greets <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology>, and handles non-<Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology> through 11 repository-level inputs.
+Configure how Sponsor Gated Support gates issues, greets <Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsors</Terminology>, and handles non-<Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsors</Terminology> through 11 repository-level inputs.
 
 ## Quick Reference
 
-| Name                           | Required | Default            | Description                                                                                                                                                                                                                                                                                                  |
-|--------------------------------|----------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `GITHUB_PERSONAL_ACCESS_TOKEN` | Yes      |                    | <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">PAT</Terminology> with `read:org` and `read:user` scopes                                                                                                                        |
-| `GITHUB_WORKFLOW_TOKEN`        | Yes      |                    | Automatic `secrets.GITHUB_TOKEN`                                                                                                                                                                                                                                                                             |
-| `ISSUE_LABELS`                 | No       | `support`          | Comma-delimited labels to gate                                                                                                                                                                                                                                                                               |
-| `ISSUE_LIMIT_COMMENTER`        | No       | `true`             | Restrict comments to opener and <Terminology title="a member, owner, contributor, or collaborator" to="/docs/reference/terminology#insider">insiders</Terminology>                                                                                                                                           |
-| `ISSUE_LOCK_ON_CLOSE`          | No       | `true`             | Lock issues when closed                                                                                                                                                                                                                                                                                      |
-| `ISSUE_MESSAGE_NOT_SPONSOR`    | No       | _(see below)_      | Message shown to non-<Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology>                                                                                                                                                   |
-| `ISSUE_MESSAGE_WELCOME`        | No       | _(see below)_      | Message shown to <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology>, exempt users, and <Terminology title="a member, owner, contributor, or collaborator" to="/docs/reference/terminology#insider">insiders</Terminology> |
-| `IS_ORGANIZATION`              | No       | `false`            | Organization-owned repo mode                                                                                                                                                                                                                                                                                 |
-| `SPONSOR_ACTIVE_ONLY`          | No       | `true`             | Only <Terminology title="a sponsor whose sponsorship is currently active" to="/docs/reference/terminology#active-sponsor">active sponsors</Terminology> pass                                                                                                                                                 |
-| `SPONSOR_EXEMPT_FILE_LOCATION` | No       | `./SPONSOR_EXEMPT` | Path to exempt usernames file                                                                                                                                                                                                                                                                                |
-| `SPONSOR_MINIMUM`              | No       | `0`                | Minimum sponsorship amount in cents                                                                                                                                                                                                                                                                          |
+| Name                           | Required | Default            | Description                                                                                                                                                                                                                                                                                                                                                     |
+|--------------------------------|----------|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `GITHUB_PERSONAL_ACCESS_TOKEN` | Yes      |                    | <Terminology title="Your own token, used only to look up who sponsors you" to="/docs/reference/terminology#tokens-and-setup">PAT</Terminology> with `read:org` and `read:user` scopes                                                                                                                                                                           |
+| `GITHUB_WORKFLOW_TOKEN`        | Yes      |                    | Automatic `secrets.GITHUB_TOKEN`                                                                                                                                                                                                                                                                                                                                |
+| `ISSUE_LABELS`                 | No       | `support`          | Comma-delimited labels to gate                                                                                                                                                                                                                                                                                                                                  |
+| `ISSUE_LIMIT_COMMENTER`        | No       | `true`             | Restrict comments to opener and <Terminology title="Your own people, so they skip the sponsor check entirely" to="/docs/reference/terminology#authors-and-insiders">insiders</Terminology>                                                                                                                                                                      |
+| `ISSUE_LOCK_ON_CLOSE`          | No       | `true`             | Lock issues when closed                                                                                                                                                                                                                                                                                                                                         |
+| `ISSUE_MESSAGE_NOT_SPONSOR`    | No       | _(see below)_      | Message shown to non-<Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsors</Terminology>                                                                                                                                                                           |
+| `ISSUE_MESSAGE_WELCOME`        | No       | _(see below)_      | Message shown to <Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsors</Terminology>, exempt users, and <Terminology title="Your own people, so they skip the sponsor check entirely" to="/docs/reference/terminology#authors-and-insiders">insiders</Terminology> |
+| `IS_ORGANIZATION`              | No       | `false`            | Organization-owned repo mode                                                                                                                                                                                                                                                                                                                                    |
+| `SPONSOR_ACTIVE_ONLY`          | No       | `true`             | Only <Terminology title="Sponsoring right now, not someone who sponsored once" to="/docs/reference/terminology#sponsors-and-eligibility">active sponsors</Terminology> pass                                                                                                                                                                                     |
+| `SPONSOR_EXEMPT_FILE_LOCATION` | No       | `./SPONSOR_EXEMPT` | Path to exempt usernames file                                                                                                                                                                                                                                                                                                                                   |
+| `SPONSOR_MINIMUM`              | No       | `0`                | Minimum sponsorship amount in cents                                                                                                                                                                                                                                                                                                                             |
+
+Any optional input that resolves to an empty value, such as an unset repository variable, uses the default shown above.
 
 ## Tokens
 
-Both tokens live under the **Secrets** tab (Settings > Secrets and variables > Actions > Secrets tab) so their values stay masked in workflow logs.
+Store the personal access token under the **Secrets** tab (Settings > Secrets and variables > Actions > Secrets tab). GitHub creates `secrets.GITHUB_TOKEN` automatically on each run, and the action masks both token values in workflow logs.
 
 ### `GITHUB_PERSONAL_ACCESS_TOKEN`
 
-A classic <Terminology title="classic token used only to read sponsor data" to="/docs/reference/terminology#personal-access-token-pat">personal access token</Terminology> used to query the GitHub Sponsors API. You can generate one from the [Personal Access Tokens (Classic)](https://github.com/settings/tokens) page.
+A classic <Terminology title="Your own token, used only to look up who sponsors you" to="/docs/reference/terminology#tokens-and-setup">personal access token</Terminology> used to query the GitHub Sponsors API. You can generate one from the [Personal Access Tokens (Classic)](https://github.com/settings/tokens) page.
 
 The token needs two scopes:
 
-- `read:org` — reads organization membership when `IS_ORGANIZATION` is `true`.
-- `read:user` — reads <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology> relationships for personal accounts.
+- `read:org` — reads the organization's sponsorships when `IS_ORGANIZATION` is `true`.
+- `read:user` — reads <Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsor</Terminology> relationships for personal accounts.
 
 The workflow reads this value from `${{ secrets.PERSONAL_ACCESS_TOKEN }}`.
 
@@ -75,11 +77,15 @@ Defaults to `support`.
 
 When set to `true`, only the issue opener, organization members, repository owners, contributors, and collaborators can comment. Unauthorized comments are automatically deleted.
 
+When set to `false`, a comment event on a gated issue isn't silently skipped: the run is marked failed and `result` is `"false"`.
+
 Defaults to `true`.
 
 ### `ISSUE_LOCK_ON_CLOSE`
 
 When set to `true`, the action locks an issue's conversation as soon as it moves to a closed state. This prevents further comments on resolved threads.
+
+When set to `false`, a close event on a gated issue marks the run failed and sets `result` to `"false"`. It doesn't stop the lock applied when the action rejects an issue opened by a non-sponsor.
 
 Defaults to `true`.
 
@@ -99,7 +105,7 @@ Apologies! Only sponsoring users are allowed to open issues. Please sponsor the 
 
 ### `ISSUE_MESSAGE_WELCOME`
 
-The comment posted when a <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology>, an exempt user, or an <Terminology title="a member, owner, contributor, or collaborator" to="/docs/reference/terminology#insider">insider</Terminology> opens a gated issue. The issue stays open for the team to triage.
+The comment posted when a <Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsor</Terminology>, an exempt user, or an <Terminology title="Your own people, so they skip the sponsor check entirely" to="/docs/reference/terminology#authors-and-insiders">insider</Terminology> opens a gated issue. The issue stays open for the team to triage.
 
 Default value:
 
@@ -107,21 +113,21 @@ Default value:
 Thank you for your support! We appreciate your sponsorship and are here to help. We will review your issue and get back to you as soon as possible.
 ```
 
-You can personalize these messages with your project's branding, links to your <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology> page, or support-specific instructions.
+You can personalize these messages with your project's branding, links to your <Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsor</Terminology> page, or support-specific instructions.
 
 ## Sponsorship
 
-These variables define who qualifies as a <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology>. You can find them under the **Variables** tab.
+These variables define who qualifies as a <Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsor</Terminology>. You can find them under the **Variables** tab.
 
 ### `IS_ORGANIZATION`
 
-When set to `true`, the action queries the organization's <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsor</Terminology> list instead of the individual user's. You'll want to enable this for any repository owned by a GitHub organization.
+When set to `true`, the action queries the organization's <Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsor</Terminology> list instead of the individual user's. You'll want to enable this for any repository owned by a GitHub organization.
 
 Defaults to `false`.
 
 ### `SPONSOR_ACTIVE_ONLY`
 
-When set to `true`, only users with an active sponsorship pass the gate. Past <Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology> whose sponsorship has ended are treated the same as non-<Terminology title="a user or org sponsoring you via GitHub Sponsors" to="/docs/reference/terminology#sponsor">sponsors</Terminology>.
+When set to `true`, only users with an active sponsorship pass the gate. Past <Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsors</Terminology> whose sponsorship has ended are treated the same as non-<Terminology title="Someone paying you on GitHub Sponsors, so they get support" to="/docs/reference/terminology#sponsors-and-eligibility">sponsors</Terminology>.
 
 Defaults to `true`.
 
