@@ -4,23 +4,27 @@ export declare const configuration: z.ZodObject<{
     githubWorkflowToken: z.ZodString;
     issueLabels: z.ZodPipe<z.ZodPipe<z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>, z.ZodTransform<string[], string>>, z.ZodTransform<string[], string[]>>;
     issueLimitCommenter: z.ZodPipe<z.ZodEnum<{
+        "": "";
         true: "true";
         false: "false";
-    }>, z.ZodTransform<boolean, "true" | "false">>;
+    }>, z.ZodTransform<boolean, "" | "true" | "false">>;
     issueLockOnClose: z.ZodPipe<z.ZodEnum<{
+        "": "";
         true: "true";
         false: "false";
-    }>, z.ZodTransform<boolean, "true" | "false">>;
+    }>, z.ZodTransform<boolean, "" | "true" | "false">>;
     issueMessageNotSponsor: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
     issueMessageWelcome: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
     isOrganization: z.ZodPipe<z.ZodEnum<{
+        "": "";
         true: "true";
         false: "false";
-    }>, z.ZodTransform<boolean, "true" | "false">>;
+    }>, z.ZodTransform<boolean, "" | "true" | "false">>;
     sponsorActiveOnly: z.ZodPipe<z.ZodEnum<{
+        "": "";
         true: "true";
         false: "false";
-    }>, z.ZodTransform<boolean, "true" | "false">>;
+    }>, z.ZodTransform<boolean, "" | "true" | "false">>;
     sponsorExemptFileLocation: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
     sponsorMinimum: z.ZodCoercedNumber<unknown>;
 }, z.core.$strip>;

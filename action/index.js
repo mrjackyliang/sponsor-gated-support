@@ -56357,29 +56357,33 @@ const configuration = object({
         .transform((value) => value.split(',').map((v) => v.trim()))
         .transform((value) => value.filter((v) => v !== '')),
     issueLimitCommenter: schemas_enum([
+        '',
         'true',
         'false',
     ])
-        .transform((value) => value === 'true'),
+        .transform((value) => ((value === '') ? true : value === 'true')),
     issueLockOnClose: schemas_enum([
+        '',
         'true',
         'false',
     ])
-        .transform((value) => value === 'true'),
+        .transform((value) => ((value === '') ? true : value === 'true')),
     issueMessageNotSponsor: schemas_string()
         .transform((value) => ((value === '') ? 'Apologies! Only sponsoring users are allowed to open issues. Please sponsor the owner of this repository, then try again.' : value)),
     issueMessageWelcome: schemas_string()
         .transform((value) => ((value === '') ? 'Thank you for your support! We appreciate your sponsorship and are here to help. We will review your issue and get back to you as soon as possible.' : value)),
     isOrganization: schemas_enum([
+        '',
         'true',
         'false',
     ])
-        .transform((value) => value === 'true'),
+        .transform((value) => ((value === '') ? false : value === 'true')),
     sponsorActiveOnly: schemas_enum([
+        '',
         'true',
         'false',
     ])
-        .transform((value) => value === 'true'),
+        .transform((value) => ((value === '') ? true : value === 'true')),
     sponsorExemptFileLocation: schemas_string()
         .transform((value) => ((value === '') ? './SPONSOR_EXEMPT' : value)),
     sponsorMinimum: coerce_number(),
@@ -56838,7 +56842,7 @@ async function runAction() {
         lib_core.info(external_node_util_default().inspect(context, false, null, true));
         lib_core.endGroup();
         lib_core.startGroup('Sponsors');
-        lib_core.info(external_node_util_default().inspect(sponsors, false, null, true));
+        lib_core.info('Sponsors loaded');
         lib_core.endGroup();
         lib_core.startGroup('Running');
         switch (context.eventName) {
