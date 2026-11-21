@@ -1,5 +1,14 @@
 # sponsor-gated-support
 
+## 2.0.13 - 2026-11-21
+
+### UPDATED
+- Workspace type-check, test and build scripts, which now follow Nova's current GitHub Action layout and build with the pinned `ncc` from devDependencies.
+- Tests now report coverage through a `check:coverage` script, which fails when line, function, branch or statement coverage drops below the project minimum, and the README badges now include that coverage.
+- GitHub GraphQL calls and webhook parsing, which now sit behind one GitHub adapter so the issue and comment handlers work on project-owned events.
+- GitHub Marketplace description, which now reads "A GitHub Action that saves issue support for your sponsors and recognized contributors".
+- Nova 0.49.0, which now publishes a coverage badge with the documentation, gives the publish workflow longer step timeouts and pins its checkouts to the release commit.
+
 ## 2.0.12 - 2026-11-17
 
 ### UPDATED

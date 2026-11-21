@@ -25,6 +25,9 @@
   <a href="https://github.com/mrjackyliang/sponsor-gated-support/blob/HEAD/LICENSE">
     <img alt="GitHub License" src="https://img.shields.io/github/license/mrjackyliang/sponsor-gated-support?style=for-the-badge&logo=googledocs&logoColor=%23ffffff&color=%2348a56a">
   </a>
+  <a href="https://github.com/mrjackyliang/sponsor-gated-support/actions">
+    <img alt="Test Coverage" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fmrjackyliang.github.io%2Fsponsor-gated-support%2Fbadges%2Fcoverage.json&style=for-the-badge&logo=vitest&logoColor=%23ffffff">
+  </a>
   <a href="https://github.com/sponsors/mrjackyliang">
     <img alt="Become a GitHub Sponsor" src="https://img.shields.io/badge/github-sponsor-gray?style=for-the-badge&logo=githubsponsors&logoColor=%23ffffff&color=%23eaaf41">
   </a>
@@ -37,7 +40,7 @@
 <!-- nova-region: introduction -->
 ## Introduction
 
-GitHub Action that keeps labeled support issues for the people who back your work. When a non-sponsor opens one, it replies, closes, and locks it; sponsors get a welcome instead. Eligibility comes from live GitHub Sponsors data, contributor status, or an exempt list, with a minimum sponsorship amount and an active-only check. Only the labels you list are gated; the default is a single support label.
+Reply to, close, and lock support issues from anyone who isn't a sponsor, and welcome the ones who are. Eligibility checks live GitHub Sponsors data, contributors, and an exempt list, with an optional minimum amount and active-only rule.
 <!-- nova-region-end: introduction -->
 
 <!-- nova-region: documentation -->

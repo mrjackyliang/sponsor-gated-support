@@ -5780,7 +5780,7 @@ var request = withDefaults(import_endpoint.endpoint, {
 
 var register = __nccwpck_require__(8195);
 var addHook = __nccwpck_require__(8491);
-var removeHook = __nccwpck_require__(48);
+var removeHook = __nccwpck_require__(6781);
 
 // bind with array of arguments: https://stackoverflow.com/a/21792913
 var bind = Function.bind;
@@ -5930,7 +5930,7 @@ function register(state, name, method, options) {
 
 /***/ }),
 
-/***/ 48:
+/***/ 6781:
 /***/ ((module) => {
 
 module.exports = removeHook;
@@ -48595,6 +48595,141 @@ var external_node_util_ = __nccwpck_require__(7261);
 var external_node_util_default = /*#__PURE__*/__nccwpck_require__.n(external_node_util_);
 // EXTERNAL MODULE: ../../node_modules/@actions/core/lib/core.js
 var lib_core = __nccwpck_require__(7117);
+;// CONCATENATED MODULE: ./src/lib/action.ts
+
+async function issueCommentAction(parsedEvent, config, github) {
+    if (parsedEvent['status'] === 'empty') {
+        lib_core.setFailed('The payload for "issue_comment" is empty');
+        lib_core.setOutput('result', false);
+        return;
+    }
+    if (parsedEvent['status'] === 'invalid') {
+        lib_core.setFailed('The payload for "issue_comment" is invalid');
+        lib_core.setOutput('result', false);
+        return;
+    }
+    const event = parsedEvent['event'];
+    if (event['action'] !== 'created'
+        && event['action'] !== 'edited') {
+        lib_core.setFailed(`The "${event['action']}" action is not supported`);
+        lib_core.setOutput('result', false);
+        return;
+    }
+    if (config['issueLimitCommenter'] === false) {
+        lib_core.setFailed('An issue comment was created or edited, however the "ISSUE_LIMIT_COMMENTER" setting is set to "false"');
+        lib_core.setOutput('result', false);
+        return;
+    }
+    if (config['issueLabels'].length !== 0
+        && event['issue']['labelNames'].some((issueLabelName) => config['issueLabels'].includes(issueLabelName)) === false) {
+        lib_core.info('Skipping "issue_comment" action, issue does not have wanted labels');
+        lib_core.setOutput('result', true);
+        return;
+    }
+    lib_core.info(`Running tasks for when an issue comment is ${event['action']}`);
+    if (event['comment']['authorLogin'] === null
+        || event['issue']['authorLogin'] === null) {
+        lib_core.setFailed('An issue comment was created or edited, however the comment and/or issue user information does not exist');
+        lib_core.setOutput('result', false);
+        return;
+    }
+    if (event['comment']['authorLogin'] === event['issue']['authorLogin']
+        || event['comment']['authorRole'] === 'member'
+        || event['comment']['authorRole'] === 'owner'
+        || event['comment']['authorRole'] === 'contributor'
+        || event['comment']['authorRole'] === 'collaborator') {
+        lib_core.info('Skipping "issue_comment" action, issue comment is made by either issue creator, member, owner, contributor, or collaborator');
+        lib_core.setOutput('result', true);
+        return;
+    }
+    lib_core.info('Deleting issue comment');
+    await github.deleteIssueComment(event['comment']['id']);
+    lib_core.setOutput('result', true);
+    return;
+}
+async function issuesAction(parsedEvent, config, sponsors, github) {
+    if (parsedEvent['status'] === 'empty') {
+        lib_core.setFailed('The payload for "issues" is empty');
+        lib_core.setOutput('result', false);
+        return;
+    }
+    if (parsedEvent['status'] === 'invalid') {
+        lib_core.setFailed('The payload for "issues" is invalid');
+        lib_core.setOutput('result', false);
+        return;
+    }
+    const event = parsedEvent['event'];
+    const sponsorsLogins = sponsors.map((sponsor) => sponsor['login']);
+    if (event['action'] !== 'opened'
+        && event['action'] !== 'closed') {
+        lib_core.setFailed(`The "${event['action']}" action is not supported`);
+        lib_core.setOutput('result', false);
+        return;
+    }
+    if (config['issueLabels'].length !== 0
+        && event['issue']['labelNames'].some((issueLabelName) => config['issueLabels'].includes(issueLabelName)) === false) {
+        lib_core.info('Skipping "issues" action, issue does not have wanted labels');
+        lib_core.setOutput('result', true);
+        return;
+    }
+    if (event['action'] === 'opened') {
+        lib_core.info('Running tasks for when an issue is open');
+        if (event['issue']['authorLogin'] === null) {
+            lib_core.setFailed('The issue was opened, however the user information does not exist');
+            lib_core.setOutput('result', false);
+            return;
+        }
+        const login = event['issue']['authorLogin'];
+        if (sponsorsLogins.includes(login) === true
+            || event['issue']['authorRole'] === 'member'
+            || event['issue']['authorRole'] === 'owner'
+            || event['issue']['authorRole'] === 'contributor'
+            || event['issue']['authorRole'] === 'collaborator') {
+            lib_core.info('Adding issue comment based on "ISSUE_MESSAGE_WELCOME"');
+            await github.addIssueComment(event['issue']['id'], config['issueMessageWelcome']);
+        }
+        else {
+            lib_core.info('Adding issue comment based on "ISSUE_MESSAGE_NOT_SPONSOR"');
+            try {
+                await github.addIssueComment(event['issue']['id'], config['issueMessageNotSponsor']);
+            }
+            catch {
+                lib_core.warning('Failed to add issue comment, continuing to close and lock');
+            }
+            lib_core.info('Closing issue');
+            try {
+                await github.closeIssue(event['issue']['id']);
+            }
+            catch {
+                lib_core.warning('Failed to close issue, continuing to lock');
+            }
+            lib_core.info('Locking issue');
+            await github.lockIssue(event['issue']['id']);
+        }
+    }
+    if (event['action'] === 'closed') {
+        lib_core.info('Running tasks for when an issue is closed');
+        if (config['issueLockOnClose'] === false) {
+            lib_core.setFailed('The issue was closed, however the "ISSUE_LOCK_ON_CLOSE" setting is set to "false"');
+            lib_core.setOutput('result', false);
+            return;
+        }
+        if (event['issue']['locked'] === true) {
+            lib_core.info('Skipping "issues" action, issue is already locked');
+            lib_core.setOutput('result', true);
+            return;
+        }
+        lib_core.info('Locking issue');
+        await github.lockIssue(event['issue']['id']);
+    }
+    lib_core.setOutput('result', true);
+    return;
+}
+
+// EXTERNAL MODULE: ../../node_modules/@actions/github/lib/github.js
+var github = __nccwpck_require__(4005);
+// EXTERNAL MODULE: ../../node_modules/json-to-graphql-query/lib/index.js
+var lib = __nccwpck_require__(6519);
 // EXTERNAL MODULE: ../../node_modules/lodash/lodash.js
 var lodash = __nccwpck_require__(8018);
 var lodash_default = /*#__PURE__*/__nccwpck_require__.n(lodash);
@@ -56487,72 +56622,251 @@ const sponsorshipsAsMaintainer = object({
     totalCount: schemas_number(),
 });
 
+;// CONCATENATED MODULE: ./src/lib/github.ts
+
+
+
+
+class Runner {
+    #config;
+    constructor(config) {
+        this.#config = config;
+        return;
+    }
+    async addIssueComment(issueId, body) {
+        await github.getOctokit(this.#config['githubWorkflowToken']).graphql((0,lib.jsonToGraphQLQuery)({
+            mutation: {
+                addComment: {
+                    __args: {
+                        input: {
+                            subjectId: issueId,
+                            body,
+                        },
+                    },
+                    subject: {
+                        id: true,
+                    },
+                },
+            },
+        }));
+        return;
+    }
+    async closeIssue(issueId) {
+        await github.getOctokit(this.#config['githubWorkflowToken']).graphql((0,lib.jsonToGraphQLQuery)({
+            mutation: {
+                closeIssue: {
+                    __args: {
+                        input: {
+                            issueId,
+                        },
+                    },
+                    issue: {
+                        id: true,
+                    },
+                },
+            },
+        }));
+        return;
+    }
+    async deleteIssueComment(commentId) {
+        await github.getOctokit(this.#config['githubWorkflowToken']).graphql((0,lib.jsonToGraphQLQuery)({
+            mutation: {
+                deleteIssueComment: {
+                    __args: {
+                        input: {
+                            id: commentId,
+                        },
+                    },
+                    clientMutationId: true,
+                },
+            },
+        }));
+        return;
+    }
+    getContext() {
+        return github.context;
+    }
+    async getSponsors() {
+        return this.fetchSponsors(null, []);
+    }
+    async lockIssue(issueId) {
+        await github.getOctokit(this.#config['githubWorkflowToken']).graphql((0,lib.jsonToGraphQLQuery)({
+            mutation: {
+                lockLockable: {
+                    __args: {
+                        input: {
+                            lockableId: issueId,
+                        },
+                    },
+                    lockedRecord: {
+                        locked: true,
+                    },
+                },
+            },
+        }));
+        return;
+    }
+    parseIssueCommentEvent(payload) {
+        if (lodash_default().isEmpty(payload) === true) {
+            return {
+                status: 'empty',
+            };
+        }
+        const parsedPayload = issueCommentPayload.safeParse(payload);
+        if (parsedPayload.success === false) {
+            return {
+                status: 'invalid',
+            };
+        }
+        const data = parsedPayload.data;
+        return {
+            status: 'valid',
+            event: {
+                action: data['action'],
+                comment: {
+                    authorLogin: (data['comment']['user'] !== null) ? data['comment']['user']['login'] : null,
+                    authorRole: Runner.toAuthorRole(data['comment']['author_association']),
+                    id: data['comment']['node_id'],
+                },
+                issue: {
+                    authorLogin: (data['issue']['user'] !== null) ? data['issue']['user']['login'] : null,
+                    labelNames: data['issue']['labels'].map((label) => label['name']),
+                },
+            },
+        };
+    }
+    parseIssuesEvent(payload) {
+        if (lodash_default().isEmpty(payload) === true) {
+            return {
+                status: 'empty',
+            };
+        }
+        const parsedPayload = issuesPayload.safeParse(payload);
+        if (parsedPayload.success === false) {
+            return {
+                status: 'invalid',
+            };
+        }
+        const data = parsedPayload.data;
+        return {
+            status: 'valid',
+            event: {
+                action: data['action'],
+                issue: {
+                    authorLogin: (data['issue']['user'] !== null) ? data['issue']['user']['login'] : null,
+                    authorRole: Runner.toAuthorRole(data['issue']['author_association']),
+                    id: data['issue']['node_id'],
+                    labelNames: data['issue']['labels'].map((label) => label['name']),
+                    locked: data['issue']['locked'],
+                },
+            },
+        };
+    }
+    async fetchSponsors(cursor, results) {
+        if (this.#config['isOrganization'] === true
+            && typeof process.env['GITHUB_REPOSITORY_OWNER'] !== 'string') {
+            throw new Error('Organization mode enabled, but GitHub repository owner environment variable does not exist');
+        }
+        const octokitResponseRoot = (this.#config['isOrganization'] === true) ? 'organization' : 'viewer';
+        const octokitResponse = await github.getOctokit(this.#config['githubPersonalAccessToken']).graphql((0,lib.jsonToGraphQLQuery)({
+            query: {
+                [octokitResponseRoot]: {
+                    ...(this.#config['isOrganization'] === true) ? { __args: { login: process.env['GITHUB_REPOSITORY_OWNER'] } } : {},
+                    sponsorshipsAsMaintainer: {
+                        __args: {
+                            first: 100,
+                            includePrivate: true,
+                            activeOnly: this.#config['sponsorActiveOnly'],
+                            after: cursor,
+                        },
+                        nodes: {
+                            sponsorEntity: {
+                                __on: [
+                                    {
+                                        __typeName: 'User',
+                                        login: true,
+                                    },
+                                    {
+                                        __typeName: 'Organization',
+                                        login: true,
+                                    },
+                                ],
+                            },
+                            tier: {
+                                monthlyPriceInCents: true,
+                            },
+                        },
+                        pageInfo: {
+                            endCursor: true,
+                            hasNextPage: true,
+                        },
+                        totalCount: true,
+                    },
+                },
+            },
+        }));
+        const octokitResponsePath = [
+            octokitResponseRoot,
+            'sponsorshipsAsMaintainer',
+        ];
+        const sponsorships = lodash_default().get(octokitResponse, octokitResponsePath, {});
+        const parsedSponsorships = sponsorshipsAsMaintainer.safeParse(sponsorships);
+        if (parsedSponsorships.success === false) {
+            throw new Error('There was an error retrieving sponsorships');
+        }
+        const data = parsedSponsorships.data;
+        const newResults = [
+            ...results,
+            ...data['nodes'].map((node) => {
+                if (node['sponsorEntity'] === null
+                    || node['tier'] === null) {
+                    return null;
+                }
+                if (node['tier']['monthlyPriceInCents'] < this.#config['sponsorMinimum']) {
+                    return null;
+                }
+                return {
+                    type: 'github-api',
+                    login: node['sponsorEntity']['login'],
+                    amount: node['tier']['monthlyPriceInCents'],
+                };
+            }).filter((node) => node !== null),
+        ];
+        if (data['pageInfo']['hasNextPage'] === true) {
+            return this.fetchSponsors(data['pageInfo']['endCursor'], newResults);
+        }
+        return newResults;
+    }
+    static toAuthorRole(authorAssociation) {
+        switch (authorAssociation) {
+            case 'COLLABORATOR': {
+                return 'collaborator';
+            }
+            case 'CONTRIBUTOR': {
+                return 'contributor';
+            }
+            case 'MEMBER': {
+                return 'member';
+            }
+            case 'OWNER': {
+                return 'owner';
+            }
+            default: {
+                return 'other';
+            }
+        }
+    }
+}
+
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs");
 ;// CONCATENATED MODULE: external "node:path"
 const external_node_path_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:path");
-// EXTERNAL MODULE: ../../node_modules/@actions/github/lib/github.js
-var github = __nccwpck_require__(4005);
-// EXTERNAL MODULE: ../../node_modules/json-to-graphql-query/lib/index.js
-var lib = __nccwpck_require__(6519);
 ;// CONCATENATED MODULE: ./src/lib/utility.ts
 
 
 
 
-
-
-
-async function addIssueComment(nodeId, body, config) {
-    await github.getOctokit(config['githubWorkflowToken']).graphql((0,lib.jsonToGraphQLQuery)({
-        mutation: {
-            addComment: {
-                __args: {
-                    input: {
-                        subjectId: nodeId,
-                        body,
-                    },
-                },
-                subject: {
-                    id: true,
-                },
-            },
-        },
-    }));
-    return;
-}
-async function closeIssue(nodeId, config) {
-    await github.getOctokit(config['githubWorkflowToken']).graphql((0,lib.jsonToGraphQLQuery)({
-        mutation: {
-            closeIssue: {
-                __args: {
-                    input: {
-                        issueId: nodeId,
-                    },
-                },
-                issue: {
-                    id: true,
-                },
-            },
-        },
-    }));
-    return;
-}
-async function deleteIssueComment(nodeId, config) {
-    await github.getOctokit(config['githubWorkflowToken']).graphql((0,lib.jsonToGraphQLQuery)({
-        mutation: {
-            deleteIssueComment: {
-                __args: {
-                    input: {
-                        id: nodeId,
-                    },
-                },
-                clientMutationId: true,
-            },
-        },
-    }));
-    return;
-}
 function getConfig() {
     return configuration.parse({
         githubPersonalAccessToken: lib_core.getInput('GITHUB_PERSONAL_ACCESS_TOKEN'),
@@ -56567,84 +56881,6 @@ function getConfig() {
         sponsorExemptFileLocation: lib_core.getInput('SPONSOR_EXEMPT_FILE_LOCATION'),
         sponsorMinimum: lib_core.getInput('SPONSOR_MINIMUM'),
     });
-}
-function getContext() {
-    return github.context;
-}
-async function getSponsors(config, cursor = null, results = []) {
-    if (config['isOrganization'] === true
-        && typeof process.env['GITHUB_REPOSITORY_OWNER'] !== 'string') {
-        throw new Error('Organization mode enabled, but GitHub repository owner environment variable does not exist');
-    }
-    const octokitResponseRoot = (config['isOrganization'] === true) ? 'organization' : 'viewer';
-    const octokitResponse = await github.getOctokit(config['githubPersonalAccessToken']).graphql((0,lib.jsonToGraphQLQuery)({
-        query: {
-            [octokitResponseRoot]: {
-                ...(config['isOrganization'] === true) ? { __args: { login: process.env['GITHUB_REPOSITORY_OWNER'] } } : {},
-                sponsorshipsAsMaintainer: {
-                    __args: {
-                        first: 100,
-                        includePrivate: true,
-                        activeOnly: config['sponsorActiveOnly'],
-                        after: cursor,
-                    },
-                    nodes: {
-                        sponsorEntity: {
-                            __on: [
-                                {
-                                    __typeName: 'User',
-                                    login: true,
-                                },
-                                {
-                                    __typeName: 'Organization',
-                                    login: true,
-                                },
-                            ],
-                        },
-                        tier: {
-                            monthlyPriceInCents: true,
-                        },
-                    },
-                    pageInfo: {
-                        endCursor: true,
-                        hasNextPage: true,
-                    },
-                    totalCount: true,
-                },
-            },
-        },
-    }));
-    const octokitResponsePath = [
-        octokitResponseRoot,
-        'sponsorshipsAsMaintainer',
-    ];
-    const sponsorships = lodash_default().get(octokitResponse, octokitResponsePath, {});
-    const parsedSponsorships = sponsorshipsAsMaintainer.safeParse(sponsorships);
-    if (parsedSponsorships.success === false) {
-        throw new Error('There was an error retrieving sponsorships');
-    }
-    const data = parsedSponsorships.data;
-    const newResults = [
-        ...results,
-        ...data['nodes'].map((node) => {
-            if (node['sponsorEntity'] === null
-                || node['tier'] === null) {
-                return null;
-            }
-            if (node['tier']['monthlyPriceInCents'] < config['sponsorMinimum']) {
-                return null;
-            }
-            return {
-                type: 'github-api',
-                login: node['sponsorEntity']['login'],
-                amount: node['tier']['monthlyPriceInCents'],
-            };
-        }).filter((node) => node !== null),
-    ];
-    if (data['pageInfo']['hasNextPage'] === true) {
-        return getSponsors(config, data['pageInfo']['endCursor'], newResults);
-    }
-    return newResults;
 }
 function getSponsorsExempt(config) {
     const sponsorExemptFileLocation = config['sponsorExemptFileLocation'];
@@ -56662,163 +56898,9 @@ function getSponsorsExempt(config) {
         return [];
     }
 }
-async function lockIssue(nodeId, config) {
-    await github.getOctokit(config['githubWorkflowToken']).graphql((0,lib.jsonToGraphQLQuery)({
-        mutation: {
-            lockLockable: {
-                __args: {
-                    input: {
-                        lockableId: nodeId,
-                    },
-                },
-                lockedRecord: {
-                    locked: true,
-                },
-            },
-        },
-    }));
-    return;
-}
-
-;// CONCATENATED MODULE: ./src/lib/action.ts
-
-
-
-
-async function issueCommentAction(payload, config) {
-    if (lodash_default().isEmpty(payload) === true) {
-        lib_core.setFailed('The payload for "issue_comment" is empty');
-        lib_core.setOutput('result', false);
-        return;
-    }
-    const parsedPayload = issueCommentPayload.safeParse(payload);
-    if (parsedPayload.success === false) {
-        lib_core.setFailed('The payload for "issue_comment" is invalid');
-        lib_core.setOutput('result', false);
-        return;
-    }
-    const data = parsedPayload.data;
-    const issueLabelNames = data['issue']['labels'].map((label) => label['name']);
-    if (data['action'] !== 'created'
-        && data['action'] !== 'edited') {
-        lib_core.setFailed(`The "${data['action']}" action is not supported`);
-        lib_core.setOutput('result', false);
-        return;
-    }
-    if (config['issueLimitCommenter'] === false) {
-        lib_core.setFailed('An issue comment was created or edited, however the "ISSUE_LIMIT_COMMENTER" setting is set to "false"');
-        lib_core.setOutput('result', false);
-        return;
-    }
-    if (config['issueLabels'].length !== 0
-        && issueLabelNames.some((issueLabelName) => config['issueLabels'].includes(issueLabelName)) === false) {
-        lib_core.info('Skipping "issue_comment" action, issue does not have wanted labels');
-        lib_core.setOutput('result', true);
-        return;
-    }
-    lib_core.info(`Running tasks for when an issue comment is ${data['action']}`);
-    if (data['comment']['user'] === null
-        || data['issue']['user'] === null) {
-        lib_core.setFailed('An issue comment was created or edited, however the comment and/or issue user information does not exist');
-        lib_core.setOutput('result', false);
-        return;
-    }
-    if (data['comment']['user']['login'] === data['issue']['user']['login']
-        || data['comment']['author_association'] === 'MEMBER'
-        || data['comment']['author_association'] === 'OWNER'
-        || data['comment']['author_association'] === 'CONTRIBUTOR'
-        || data['comment']['author_association'] === 'COLLABORATOR') {
-        lib_core.info('Skipping "issue_comment" action, issue comment is made by either issue creator, member, owner, contributor, or collaborator');
-        lib_core.setOutput('result', true);
-        return;
-    }
-    lib_core.info('Deleting issue comment');
-    await deleteIssueComment(data['comment']['node_id'], config);
-    lib_core.setOutput('result', true);
-    return;
-}
-async function issuesAction(payload, config, sponsors) {
-    if (lodash_default().isEmpty(payload) === true) {
-        lib_core.setFailed('The payload for "issues" is empty');
-        lib_core.setOutput('result', false);
-        return;
-    }
-    const parsedPayload = issuesPayload.safeParse(payload);
-    if (parsedPayload.success === false) {
-        lib_core.setFailed('The payload for "issues" is invalid');
-        lib_core.setOutput('result', false);
-        return;
-    }
-    const data = parsedPayload.data;
-    const issueLabelNames = data['issue']['labels'].map((label) => label['name']);
-    const sponsorsLogins = sponsors.map((sponsor) => sponsor['login']);
-    if (data['action'] !== 'opened'
-        && data['action'] !== 'closed') {
-        lib_core.setFailed(`The "${data['action']}" action is not supported`);
-        lib_core.setOutput('result', false);
-        return;
-    }
-    if (config['issueLabels'].length !== 0
-        && issueLabelNames.some((issueLabelName) => config['issueLabels'].includes(issueLabelName)) === false) {
-        lib_core.info('Skipping "issues" action, issue does not have wanted labels');
-        lib_core.setOutput('result', true);
-        return;
-    }
-    if (data['action'] === 'opened') {
-        lib_core.info('Running tasks for when an issue is open');
-        if (data['issue']['user'] === null) {
-            lib_core.setFailed('The issue was opened, however the user information does not exist');
-            lib_core.setOutput('result', false);
-            return;
-        }
-        const login = data['issue']['user']['login'];
-        if (sponsorsLogins.includes(login) === true
-            || data['issue']['author_association'] === 'MEMBER'
-            || data['issue']['author_association'] === 'OWNER'
-            || data['issue']['author_association'] === 'CONTRIBUTOR'
-            || data['issue']['author_association'] === 'COLLABORATOR') {
-            lib_core.info('Adding issue comment based on "ISSUE_MESSAGE_WELCOME"');
-            await addIssueComment(data['issue']['node_id'], config['issueMessageWelcome'], config);
-        }
-        else {
-            lib_core.info('Adding issue comment based on "ISSUE_MESSAGE_NOT_SPONSOR"');
-            try {
-                await addIssueComment(data['issue']['node_id'], config['issueMessageNotSponsor'], config);
-            }
-            catch {
-                lib_core.warning('Failed to add issue comment, continuing to close and lock');
-            }
-            lib_core.info('Closing issue');
-            try {
-                await closeIssue(data['issue']['node_id'], config);
-            }
-            catch {
-                lib_core.warning('Failed to close issue, continuing to lock');
-            }
-            lib_core.info('Locking issue');
-            await lockIssue(data['issue']['node_id'], config);
-        }
-    }
-    if (data['action'] === 'closed') {
-        lib_core.info('Running tasks for when an issue is closed');
-        if (config['issueLockOnClose'] === false) {
-            lib_core.setFailed('The issue was closed, however the "ISSUE_LOCK_ON_CLOSE" setting is set to "false"');
-            lib_core.setOutput('result', false);
-            return;
-        }
-        if (data['issue']['locked'] === true) {
-            lib_core.info('Skipping "issues" action, issue is already locked');
-            lib_core.setOutput('result', true);
-            return;
-        }
-        lib_core.info('Locking issue');
-        await lockIssue(data['issue']['node_id'], config);
-    }
-    lib_core.setOutput('result', true);
-    return;
-}
 
 ;// CONCATENATED MODULE: ./src/run.ts
+
 
 
 
@@ -56828,8 +56910,9 @@ async function runAction() {
         const config = getConfig();
         lib_core.setSecret(config['githubPersonalAccessToken']);
         lib_core.setSecret(config['githubWorkflowToken']);
-        const context = getContext();
-        const sponsorsGitHub = await getSponsors(config);
+        const github = new Runner(config);
+        const context = github.getContext();
+        const sponsorsGitHub = await github.getSponsors();
         const sponsorsExempt = getSponsorsExempt(config);
         const sponsors = [
             ...sponsorsGitHub,
@@ -56845,17 +56928,17 @@ async function runAction() {
         lib_core.info('Sponsors loaded');
         lib_core.endGroup();
         lib_core.startGroup('Running');
-        switch (context.eventName) {
+        switch (context['eventName']) {
             case 'issue_comment': {
-                await issueCommentAction(context.payload, config);
+                await issueCommentAction(github.parseIssueCommentEvent(context['payload']), config, github);
                 break;
             }
             case 'issues': {
-                await issuesAction(context.payload, config, sponsors);
+                await issuesAction(github.parseIssuesEvent(context['payload']), config, sponsors, github);
                 break;
             }
             default: {
-                lib_core.setFailed(`Unknown or unsupported event (${context.eventName})`);
+                lib_core.setFailed(`Unknown or unsupported event (${context['eventName']})`);
                 lib_core.setOutput('result', false);
                 break;
             }

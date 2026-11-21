@@ -1,4 +1,4 @@
-import type { Lib_Action_IssueCommentAction_Config, Lib_Action_IssueCommentAction_Payload, Lib_Action_IssueCommentAction_Returns, Lib_Action_IssuesAction_Config, Lib_Action_IssuesAction_Payload, Lib_Action_IssuesAction_Returns, Lib_Action_IssuesAction_Sponsors } from '../types/lib/action.d.ts';
-export declare function issueCommentAction(payload: Lib_Action_IssueCommentAction_Payload, config: Lib_Action_IssueCommentAction_Config): Lib_Action_IssueCommentAction_Returns;
-export declare function issuesAction(payload: Lib_Action_IssuesAction_Payload, config: Lib_Action_IssuesAction_Config, sponsors: Lib_Action_IssuesAction_Sponsors): Lib_Action_IssuesAction_Returns;
+import type { Lib_Action_IssueCommentAction_Config, Lib_Action_IssueCommentAction_Github, Lib_Action_IssueCommentAction_ParsedEvent, Lib_Action_IssueCommentAction_Returns, Lib_Action_IssuesAction_Config, Lib_Action_IssuesAction_Github, Lib_Action_IssuesAction_ParsedEvent, Lib_Action_IssuesAction_Returns, Lib_Action_IssuesAction_Sponsors } from '../types/lib/action.d.ts';
+export declare function issueCommentAction(parsedEvent: Lib_Action_IssueCommentAction_ParsedEvent, config: Lib_Action_IssueCommentAction_Config, github: Lib_Action_IssueCommentAction_Github): Lib_Action_IssueCommentAction_Returns;
+export declare function issuesAction(parsedEvent: Lib_Action_IssuesAction_ParsedEvent, config: Lib_Action_IssuesAction_Config, sponsors: Lib_Action_IssuesAction_Sponsors, github: Lib_Action_IssuesAction_Github): Lib_Action_IssuesAction_Returns;
 //# sourceMappingURL=action.d.ts.map
