@@ -6,10 +6,7 @@
     "@cbnventures/nova/presets/tsconfig/runtime-node.json"
   ],
   "compilerOptions": {
-    "noEmitOnError": false,
-    "outDir": "./build",
     "rootDir": "./src",
-    "sourceMap": true,
     "resolveJsonModule": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -18,9 +15,10 @@
     ]
   },
   "include": [
-    "./src/index.ts",
-    "./src/run.ts",
-    "./src/lib/**/*",
-    "./src/types/**/*"
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "./src/**/*.test.ts",
+    "./src/tests/**"
   ]
 }

@@ -54,21 +54,33 @@ sponsor-gated-support/
 ```
 packages/sponsor-gated-support/src/
 |-- index.ts       - Action entry point; calls runAction()
-|-- run.ts         - Orchestrator: loads config, context, and sponsors; logs grouped
-|                    output; dispatches by event name (issues / issue_comment)
+|-- run.ts         - Orchestrator: loads config, builds the GitHub adapter, reads
+|                    context and sponsors; logs grouped output; parses the payload
+|                    through the adapter and dispatches by event name
 |-- lib/
 |   |-- action.ts  - Event handlers: issuesAction() gates issue opening and locks on
-|   |                close; issueCommentAction() moderates comments on gated issues
-|   |-- schema.ts  - Zod schemas: configuration (input parsing and defaults),
-|   |                issueCommentPayload, issuesPayload, sponsorshipsAsMaintainer
-|   `-- utility.ts - GraphQL helpers (addIssueComment, closeIssue, deleteIssueComment,
-|                    lockIssue) plus getConfig, getContext, getSponsors (paginated),
-|                    and getSponsorsExempt (exempt file reader)
+|   |                close; issueCommentAction() moderates comments on gated issues.
+|   |                Both take project-owned events and the adapter, never raw
+|   |                webhook payloads
+|   |-- github.ts  - GitHub adapter (Runner): the only module that imports
+|   |                @actions/github or json-to-graphql-query. Owns getContext,
+|   |                getSponsors (paginated), the addIssueComment, closeIssue,
+|   |                deleteIssueComment, and lockIssue mutations, and
+|   |                parseIssuesEvent / parseIssueCommentEvent, which map webhook
+|   |                payloads (including author_association) into project events
+|   |-- schema.ts  - Zod schemas: configuration (input parsing and defaults), plus
+|   |                the GitHub shapes issueCommentPayload, issuesPayload, and
+|   |                sponsorshipsAsMaintainer, which only github.ts imports
+|   `-- utility.ts - getConfig (action inputs) and getSponsorsExempt (exempt file
+|                    reader)
 `-- types/
     |-- run.d.ts    - Per-function type aliases for run.ts
-    |-- shared.d.ts - Shared Sponsor type (type, login, amount)
+    |-- shared.d.ts - Shared types: Sponsor, the GithubAdapter shape, project-owned
+    |                 IssuesEvent / IssueCommentEvent, their parse results,
+    |                 AuthorRole, and WorkflowContext
     `-- lib/
         |-- action.d.ts  - Per-function type aliases for lib/action.ts
+        |-- github.d.ts  - Per-method type aliases for lib/github.ts
         `-- utility.d.ts - Per-function type aliases for lib/utility.ts
 ```
 
@@ -79,7 +91,8 @@ packages/sponsor-gated-support/src/
 | `action.yml`                                        | Action metadata: inputs, defaults, output, runtime | Adding or changing inputs; keep docs and schemas aligned        |
 | `packages/sponsor-gated-support/src/run.ts`         | Orchestrator and event dispatch                    | Supporting new event types                                      |
 | `packages/sponsor-gated-support/src/lib/action.ts`  | Gating and moderation logic                        | Changing issue or comment behavior                              |
-| `packages/sponsor-gated-support/src/lib/utility.ts` | GraphQL operations, config, sponsor fetch          | Adding GitHub operations or changing sponsor collection         |
+| `packages/sponsor-gated-support/src/lib/github.ts`  | GitHub adapter: GraphQL, sponsors, webhook parsing | Adding GitHub operations or following an upstream API change    |
+| `packages/sponsor-gated-support/src/lib/utility.ts` | Input config and exempt-file reader                | Changing how inputs or the exempt file are read                 |
 | `packages/sponsor-gated-support/src/lib/schema.ts`  | Zod schemas and input defaults                     | Changing input shape, defaults, or payload fields               |
 | `packages/sponsor-gated-support/src/types/`         | Per-function type aliases                          | Whenever an exported function signature changes                 |
 | `packages/sponsor-gated-support/.env.sample`        | Local-run input template                           | Whenever inputs are added or renamed                            |
@@ -120,7 +133,7 @@ In production, all settings arrive as action inputs through the workflow `with:`
 
 | Variable                                      | Required               | Purpose                                                                                                                               |
 |-----------------------------------------------|------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| `GITHUB_REPOSITORY_OWNER`                     | Organization mode only | Provided by the Actions runner; `getSponsors()` throws if `IS_ORGANIZATION` is true and it is missing                                 |
+| `GITHUB_REPOSITORY_OWNER`                     | Organization mode only | Provided by the Actions runner; the adapter's `getSponsors()` throws if `IS_ORGANIZATION` is true and it is missing                   |
 | `INPUT_*` (local `.env` only)                 | No                     | Feed action inputs to `npm run dev --workspace sponsor-gated-support` via `@github/local-action`; see `.env.sample` for the full list |
 | `ACTIONS_RUNNER_DEBUG` / `ACTIONS_STEP_DEBUG` | No                     | Debug output toggles for local runs (in `.env.sample`)                                                                                |
 
@@ -142,7 +155,8 @@ In production, all settings arrive as action inputs through the workflow `with:`
 
 **Do:**
 - Validate every incoming webhook payload with Zod `.safeParse()` and fail with `core.setFailed()` on invalid shapes; parse inputs through the `configuration` schema, which also applies defaults.
-- Build GraphQL operations as objects with `json-to-graphql-query` and keep all GraphQL calls in `src/lib/utility.ts`.
+- Build GraphQL operations as objects with `json-to-graphql-query` and keep all GraphQL calls in `src/lib/github.ts`.
+- Keep every third-party API and platform call behind a project-owned adapter. GitHub (Octokit, GraphQL, the workflow context, and webhook payload fields such as `author_association` or `node_id`) belongs only in `src/lib/github.ts`; core modules receive project-owned types from `src/types/shared.d.ts` and the adapter through its `Shared_GithubAdapter` shape, so tests pass a fake instead of mocking `@actions/github`.
 - Set the `result` output (`core.setOutput('result', ...)`) on every exit path of an event handler, including skips and failures.
 - Use the personal access token (`ghp_`) only to read sponsors, and the workflow token (`ghs_`) for all mutations, so moderation appears as the github-actions bot rather than the repository owner.
 - Import through the `@/` path alias with explicit `.js` / `.d.ts` extensions (ESM module resolution).
@@ -154,7 +168,7 @@ In production, all settings arrive as action inputs through the workflow `with:`
 - Don't grant the personal access token write scopes; it needs only `read:org` and `read:user`, and write access would make moderation appear as the owner instead of the bot.
 - Don't commit `.env` or `package-lock.json`; both are gitignored (only `.env.sample` is committed).
 - Don't edit `CLAUDE.md`, `AGENTS.md`, or `conventions/*.md`; they are generated by Nova's agent-conventions generator and local changes are overwritten.
-- Don't throw raw errors out of event handlers; report failures with `core.setFailed()` plus a `result` output and return. Only `getSponsors()` throws intentionally; config parsing (`configuration.parse()`) and the Octokit GraphQL mutations can also throw, and all of these are caught by the `src/run.ts` try/catch.
+- Don't throw raw errors out of event handlers; report failures with `core.setFailed()` plus a `result` output and return. Only the adapter's `getSponsors()` throws intentionally; config parsing (`configuration.parse()`) and the Octokit GraphQL mutations can also throw, and all of these are caught by the `src/run.ts` try/catch.
 - Don't use caret or tilde ranges in `package.json`; all dependencies are pinned to exact versions.
 
 ## Architecture and Data
@@ -171,28 +185,29 @@ src/index.ts (entry point)
   |
   v
 src/run.ts (orchestrator)
-  - getConfig() ......... parse action inputs (Zod)
-  - getContext() ........ read the workflow context
-  - getSponsors() ....... fetch sponsors via GraphQL (paginated, recursive)
-  - getSponsorsExempt() . read the exempt file
+  - getConfig() ............... parse action inputs (Zod)
+  - new GithubAdapter(config) . build the GitHub adapter
+  - github.getContext() ....... read the workflow context
+  - github.getSponsors() ...... fetch sponsors via GraphQL (paginated, recursive)
+  - getSponsorsExempt() ....... read the exempt file
   |
-  v  switch (context.eventName)
-src/lib/action.ts (event handlers)
+  v  switch (context['eventName']) + github.parseIssuesEvent / parseIssueCommentEvent
+src/lib/action.ts (event handlers, project-owned events only)
   - issuesAction() ........ gate issue opening; lock on close
   - issueCommentAction() .. moderate comments on gated issues
   |
   v
-src/lib/utility.ts (GraphQL mutations via Octokit)
+src/lib/github.ts (GitHub adapter: GraphQL mutations via Octokit)
   - addIssueComment / closeIssue / lockIssue / deleteIssueComment
 ```
 
 ### Data Flow and Ownership
 
-1. **Input** - The Actions runner invokes `build/index.js` with the event payload and inputs. Config and context are loaded via `getConfig()` / `getContext()`. Modules: `src/run.ts`, `src/lib/utility.ts`.
-2. **Sponsor collection** - `getSponsors()` queries `sponsorshipsAsMaintainer` 100 nodes per page, recursing on `pageInfo`, filtering by minimum tier amount; `getSponsorsExempt()` reads exempt-file logins, and the orchestrator concatenates the two lists. Modules: `src/lib/utility.ts`, `src/run.ts`.
-3. **Validation** - The event payload is validated against `issuesPayload` or `issueCommentPayload` with `.safeParse()`. Module: `src/lib/schema.ts`.
-4. **Decision** - The handler compares the issue labels against `ISSUE_LABELS`, then the user against sponsor logins and author association, and chooses welcome, close-and-lock, comment deletion, or skip. Module: `src/lib/action.ts`.
-5. **Output** - GraphQL mutations perform the moderation; the `result` output is set and grouped logs (`Configuration`, `Context`, `Sponsors`, `Running`) are written. Modules: `src/lib/utility.ts`, `src/run.ts`.
+1. **Input** - The Actions runner invokes `build/index.js` with the event payload and inputs. Config is loaded via `getConfig()`; context via the adapter's `getContext()`. Modules: `src/run.ts`, `src/lib/utility.ts`, `src/lib/github.ts`.
+2. **Sponsor collection** - The adapter's `getSponsors()` queries `sponsorshipsAsMaintainer` 100 nodes per page, recursing on `pageInfo`, filtering by minimum tier amount; `getSponsorsExempt()` reads exempt-file logins, and the orchestrator concatenates the two lists. Modules: `src/lib/github.ts`, `src/lib/utility.ts`, `src/run.ts`.
+3. **Validation** - The adapter validates the event payload against `issuesPayload` or `issueCommentPayload` with `.safeParse()` and returns an `empty`, `invalid`, or `valid` result carrying a project-owned event (author login, author role, labels, node id, lock state). Modules: `src/lib/github.ts`, `src/lib/schema.ts`.
+4. **Decision** - The handler compares the issue labels against `ISSUE_LABELS`, then the user against sponsor logins and author role, and chooses welcome, close-and-lock, comment deletion, or skip. Module: `src/lib/action.ts`.
+5. **Output** - The adapter's GraphQL mutations perform the moderation; the `result` output is set and grouped logs (`Configuration`, `Context`, `Sponsors`, `Running`) are written. Modules: `src/lib/github.ts`, `src/run.ts`.
 
 ### Error Strategy
 

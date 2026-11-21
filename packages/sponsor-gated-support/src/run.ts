@@ -3,16 +3,13 @@ import util from 'node:util';
 import * as core from '@actions/core';
 
 import { issueCommentAction, issuesAction } from './lib/action.js';
-import {
-  getConfig,
-  getContext,
-  getSponsors,
-  getSponsorsExempt,
-} from './lib/utility.js';
+import { Runner as GithubAdapter } from './lib/github.js';
+import { getConfig, getSponsorsExempt } from './lib/utility.js';
 
 import type {
   Run_RunAction_Config,
   Run_RunAction_Context,
+  Run_RunAction_Github,
   Run_RunAction_Returns,
   Run_RunAction_Sponsors,
   Run_RunAction_SponsorsExempt,
@@ -36,8 +33,9 @@ export async function runAction(): Run_RunAction_Returns {
     core.setSecret(config['githubPersonalAccessToken']);
     core.setSecret(config['githubWorkflowToken']);
 
-    const context: Run_RunAction_Context = getContext();
-    const sponsorsGitHub: Run_RunAction_SponsorsGitHub = await getSponsors(config);
+    const github: Run_RunAction_Github = new GithubAdapter(config);
+    const context: Run_RunAction_Context = github.getContext();
+    const sponsorsGitHub: Run_RunAction_SponsorsGitHub = await github.getSponsors();
     const sponsorsExempt: Run_RunAction_SponsorsExempt = getSponsorsExempt(config);
     const sponsors: Run_RunAction_Sponsors = [
       ...sponsorsGitHub,
@@ -68,19 +66,19 @@ export async function runAction(): Run_RunAction_Returns {
     // Run the appropriate action based on context event.
     core.startGroup('Running');
 
-    switch (context.eventName) {
+    switch (context['eventName']) {
       case 'issue_comment': {
-        await issueCommentAction(context.payload, config);
+        await issueCommentAction(github.parseIssueCommentEvent(context['payload']), config, github);
         break;
       }
 
       case 'issues': {
-        await issuesAction(context.payload, config, sponsors);
+        await issuesAction(github.parseIssuesEvent(context['payload']), config, sponsors, github);
         break;
       }
 
       default: {
-        core.setFailed(`Unknown or unsupported event (${context.eventName})`);
+        core.setFailed(`Unknown or unsupported event (${context['eventName']})`);
 
         core.setOutput('result', false);
 

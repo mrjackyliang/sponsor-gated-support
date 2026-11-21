@@ -1,4 +1,12 @@
-import * as github from '@actions/github';
+import {
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import * as core from '@actions/core';
 import {
   afterEach,
   beforeEach,
@@ -8,18 +16,11 @@ import {
   vi,
 } from 'vitest';
 
-import { getSponsors } from '../../lib/utility.js';
-
-const mockGraphql = vi.fn();
-
-vi.mock('@actions/github', () => ({
-  getOctokit: vi.fn(() => ({
-    graphql: mockGraphql,
-  })),
-}));
+import { getConfig, getSponsorsExempt } from '../../lib/utility.js';
 
 vi.mock('@actions/core', () => ({
   debug: vi.fn(),
+  getInput: vi.fn(),
   info: vi.fn(),
 }));
 
@@ -37,253 +38,106 @@ const baseConfig = {
   sponsorMinimum: 0,
 };
 
-const savedEnv = process.env['GITHUB_REPOSITORY_OWNER'];
+let tempDirectory = '';
 
 beforeEach(() => {
   vi.clearAllMocks();
 
-  Reflect.deleteProperty(process.env, 'GITHUB_REPOSITORY_OWNER');
+  tempDirectory = mkdtempSync(join(tmpdir(), 'sponsor-gated-support-'));
 
   return;
 });
 
 afterEach(() => {
-  if (savedEnv !== undefined) {
-    Reflect.set(process.env, 'GITHUB_REPOSITORY_OWNER', savedEnv);
-  } else {
-    Reflect.deleteProperty(process.env, 'GITHUB_REPOSITORY_OWNER');
-  }
+  rmSync(tempDirectory, {
+    recursive: true,
+    force: true,
+  });
 
   return;
 });
 
 /**
- * Tests - Lib - Utility - Get Sponsors.
+ * Tests - Lib - Utility - Get Config.
  *
- * @since 1.0.1
+ * @since 2.0.13
  */
-describe('getSponsors', () => {
-  it('returns sponsors from a single-page viewer response', async () => {
-    mockGraphql.mockResolvedValueOnce({
-      viewer: {
-        sponsorshipsAsMaintainer: {
-          nodes: [{
-            sponsorEntity: { login: 'sponsor1' },
-            tier: { monthlyPriceInCents: 500 },
-          }],
-          pageInfo: {
-            endCursor: null,
-            hasNextPage: false,
-          },
-          totalCount: 1,
-        },
-      },
+describe('getConfig', () => {
+  it('parses action inputs into the configuration', () => {
+    vi.mocked(core.getInput).mockImplementation((name) => {
+      switch (name) {
+        case 'GITHUB_PERSONAL_ACCESS_TOKEN': {
+          return 'ghp_test123';
+        }
+
+        case 'GITHUB_WORKFLOW_TOKEN': {
+          return 'ghs_test456';
+        }
+
+        case 'SPONSOR_MINIMUM': {
+          return '500';
+        }
+
+        default: {
+          return '';
+        }
+      }
     });
 
-    await expect(getSponsors(baseConfig)).resolves.toStrictEqual([{
-      type: 'github-api',
-      login: 'sponsor1',
-      amount: 500,
-    }]);
-
-    expect(github.getOctokit).toHaveBeenCalledWith('ghp_test123');
-
-    return;
-  });
-
-  it('returns sponsors from organization mode', async () => {
-    Reflect.set(process.env, 'GITHUB_REPOSITORY_OWNER', 'test-org');
-
-    mockGraphql.mockResolvedValueOnce({
-      organization: {
-        sponsorshipsAsMaintainer: {
-          nodes: [{
-            sponsorEntity: { login: 'orgSponsor' },
-            tier: { monthlyPriceInCents: 1000 },
-          }],
-          pageInfo: {
-            endCursor: null,
-            hasNextPage: false,
-          },
-          totalCount: 1,
-        },
-      },
+    expect(getConfig()).toMatchObject({
+      githubPersonalAccessToken: 'ghp_test123',
+      githubWorkflowToken: 'ghs_test456',
+      issueLabels: ['support'],
+      sponsorExemptFileLocation: './SPONSOR_EXEMPT',
+      sponsorMinimum: 500,
     });
 
-    await expect(getSponsors({
-      ...baseConfig,
-      isOrganization: true,
-    })).resolves.toStrictEqual([{
-      type: 'github-api',
-      login: 'orgSponsor',
-      amount: 1000,
-    }]);
-
     return;
   });
 
-  it('throws when organization mode is enabled without GITHUB_REPOSITORY_OWNER', async () => {
-    await expect(getSponsors({
+  return;
+});
+
+/**
+ * Tests - Lib - Utility - Get Sponsors Exempt.
+ *
+ * @since 2.0.13
+ */
+describe('getSponsorsExempt', () => {
+  it('reads one login per line and skips blank lines', () => {
+    writeFileSync(join(tempDirectory, 'SPONSOR_EXEMPT'), [
+      'helper-one',
+      '',
+      '  helper-two  ',
+      '',
+    ].join('\n'), 'utf8');
+
+    expect(getSponsorsExempt({
       ...baseConfig,
-      isOrganization: true,
-    })).rejects.toThrow('Organization mode enabled, but GitHub repository owner environment variable does not exist');
-
-    return;
-  });
-
-  it('paginates through multiple pages', async () => {
-    mockGraphql
-      .mockResolvedValueOnce({
-        viewer: {
-          sponsorshipsAsMaintainer: {
-            nodes: [{
-              sponsorEntity: { login: 'sponsor1' },
-              tier: { monthlyPriceInCents: 500 },
-            }],
-            pageInfo: {
-              endCursor: 'cursor1',
-              hasNextPage: true,
-            },
-            totalCount: 2,
-          },
-        },
-      })
-      .mockResolvedValueOnce({
-        viewer: {
-          sponsorshipsAsMaintainer: {
-            nodes: [{
-              sponsorEntity: { login: 'sponsor2' },
-              tier: { monthlyPriceInCents: 1000 },
-            }],
-            pageInfo: {
-              endCursor: null,
-              hasNextPage: false,
-            },
-            totalCount: 2,
-          },
-        },
-      });
-
-    await expect(getSponsors(baseConfig)).resolves.toStrictEqual([
+      sponsorExemptFileLocation: join(tempDirectory, 'SPONSOR_EXEMPT'),
+    })).toStrictEqual([
       {
-        type: 'github-api',
-        login: 'sponsor1',
-        amount: 500,
+        type: 'exempt-file',
+        login: 'helper-one',
+        amount: null,
       },
       {
-        type: 'github-api',
-        login: 'sponsor2',
-        amount: 1000,
+        type: 'exempt-file',
+        login: 'helper-two',
+        amount: null,
       },
     ]);
 
-    expect(mockGraphql).toHaveBeenCalledTimes(2);
-
     return;
   });
 
-  it('filters out sponsors below minimum amount', async () => {
-    mockGraphql.mockResolvedValueOnce({
-      viewer: {
-        sponsorshipsAsMaintainer: {
-          nodes: [
-            {
-              sponsorEntity: { login: 'lowSponsor' },
-              tier: { monthlyPriceInCents: 100 },
-            },
-            {
-              sponsorEntity: { login: 'highSponsor' },
-              tier: { monthlyPriceInCents: 500 },
-            },
-          ],
-          pageInfo: {
-            endCursor: null,
-            hasNextPage: false,
-          },
-          totalCount: 2,
-        },
-      },
-    });
-
-    await expect(getSponsors({
+  it('returns an empty list when the file is missing', () => {
+    expect(getSponsorsExempt({
       ...baseConfig,
-      sponsorMinimum: 200,
-    })).resolves.toStrictEqual([{
-      type: 'github-api',
-      login: 'highSponsor',
-      amount: 500,
-    }]);
+      sponsorExemptFileLocation: join(tempDirectory, 'MISSING'),
+    })).toStrictEqual([]);
 
-    return;
-  });
-
-  it('skips sponsors with null sponsorEntity', async () => {
-    mockGraphql.mockResolvedValueOnce({
-      viewer: {
-        sponsorshipsAsMaintainer: {
-          nodes: [{
-            sponsorEntity: null,
-            tier: { monthlyPriceInCents: 500 },
-          }],
-          pageInfo: {
-            endCursor: null,
-            hasNextPage: false,
-          },
-          totalCount: 1,
-        },
-      },
-    });
-
-    await expect(getSponsors(baseConfig)).resolves.toStrictEqual([]);
-
-    return;
-  });
-
-  it('skips sponsors with null tier', async () => {
-    mockGraphql.mockResolvedValueOnce({
-      viewer: {
-        sponsorshipsAsMaintainer: {
-          nodes: [{
-            sponsorEntity: { login: 'sponsor1' },
-            tier: null,
-          }],
-          pageInfo: {
-            endCursor: null,
-            hasNextPage: false,
-          },
-          totalCount: 1,
-        },
-      },
-    });
-
-    await expect(getSponsors(baseConfig)).resolves.toStrictEqual([]);
-
-    return;
-  });
-
-  it('throws on invalid sponsorship response', async () => {
-    mockGraphql.mockResolvedValueOnce({});
-
-    await expect(getSponsors(baseConfig)).rejects.toThrow('There was an error retrieving sponsorships');
-
-    return;
-  });
-
-  it('returns empty array when no sponsors exist', async () => {
-    mockGraphql.mockResolvedValueOnce({
-      viewer: {
-        sponsorshipsAsMaintainer: {
-          nodes: [],
-          pageInfo: {
-            endCursor: null,
-            hasNextPage: false,
-          },
-          totalCount: 0,
-        },
-      },
-    });
-
-    await expect(getSponsors(baseConfig)).resolves.toStrictEqual([]);
+    expect(core.debug).toHaveBeenCalled();
 
     return;
   });

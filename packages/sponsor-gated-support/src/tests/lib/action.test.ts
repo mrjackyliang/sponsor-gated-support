@@ -8,12 +8,6 @@ import {
 } from 'vitest';
 
 import { issueCommentAction, issuesAction } from '../../lib/action.js';
-import {
-  addIssueComment,
-  closeIssue,
-  deleteIssueComment,
-  lockIssue,
-} from '../../lib/utility.js';
 
 vi.mock('@actions/core', () => ({
   setFailed: vi.fn(),
@@ -22,12 +16,16 @@ vi.mock('@actions/core', () => ({
   warning: vi.fn(),
 }));
 
-vi.mock('../../lib/utility.js', () => ({
-  addIssueComment: vi.fn().mockResolvedValue(undefined),
-  closeIssue: vi.fn().mockResolvedValue(undefined),
-  deleteIssueComment: vi.fn().mockResolvedValue(undefined),
-  lockIssue: vi.fn().mockResolvedValue(undefined),
-}));
+const fakeGithub = {
+  addIssueComment: vi.fn(),
+  closeIssue: vi.fn(),
+  deleteIssueComment: vi.fn(),
+  getContext: vi.fn(),
+  getSponsors: vi.fn(),
+  lockIssue: vi.fn(),
+  parseIssueCommentEvent: vi.fn(),
+  parseIssuesEvent: vi.fn(),
+};
 
 const baseConfig = {
   githubPersonalAccessToken: 'ghp_test123',
@@ -43,52 +41,40 @@ const baseConfig = {
   sponsorMinimum: 0,
 };
 
-const supportLabel = {
-  color: 'fc0',
-  default: false,
-  description: null,
-  id: 1,
-  name: 'support',
-  node_id: 'LA_abc',
-  url: 'https://api.github.com/labels/support',
-};
-
-const bugLabel = {
-  color: 'd73a4a',
-  default: false,
-  description: null,
-  id: 2,
-  name: 'bug',
-  node_id: 'LA_bug',
-  url: 'https://api.github.com/labels/bug',
-};
-
-const baseCommentPayload = {
+const baseCommentEvent = {
   action: 'created',
   comment: {
-    author_association: 'NONE',
-    node_id: 'IC_abc123',
-    user: { login: 'outsider' },
+    authorLogin: 'outsider',
+    authorRole: 'other' as const,
+    id: 'IC_abc123',
   },
   issue: {
-    labels: [supportLabel],
-    user: { login: 'issueOwner' },
+    authorLogin: 'issueOwner',
+    labelNames: ['support'],
   },
 };
 
-const baseIssuePayload = {
+const baseIssueEvent = {
   action: 'opened',
   issue: {
-    author_association: 'NONE',
-    labels: [supportLabel],
+    authorLogin: 'testUser',
+    authorRole: 'other' as const,
+    id: 'I_abc123',
+    labelNames: ['support'],
     locked: false,
-    node_id: 'I_abc123',
-    user: { login: 'testUser' },
   },
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
+
+  fakeGithub['addIssueComment'].mockResolvedValue(undefined);
+
+  fakeGithub['closeIssue'].mockResolvedValue(undefined);
+
+  fakeGithub['deleteIssueComment'].mockResolvedValue(undefined);
+
+  fakeGithub['lockIssue'].mockResolvedValue(undefined);
 
   return;
 });
@@ -100,9 +86,19 @@ beforeEach(() => {
  */
 describe('issueCommentAction', () => {
   it('sets failed on empty payload', async () => {
-    await issueCommentAction({}, baseConfig);
+    await issueCommentAction({ status: 'empty' }, baseConfig, fakeGithub);
 
-    expect(core.setFailed).toHaveBeenCalled();
+    expect(core.setFailed).toHaveBeenCalledWith('The payload for "issue_comment" is empty');
+
+    expect(core.setOutput).toHaveBeenCalledWith('result', false);
+
+    return;
+  });
+
+  it('sets failed on invalid payload', async () => {
+    await issueCommentAction({ status: 'invalid' }, baseConfig, fakeGithub);
+
+    expect(core.setFailed).toHaveBeenCalledWith('The payload for "issue_comment" is invalid');
 
     expect(core.setOutput).toHaveBeenCalledWith('result', false);
 
@@ -111,12 +107,15 @@ describe('issueCommentAction', () => {
 
   it('skips when issue lacks wanted labels', async () => {
     await issueCommentAction({
-      ...baseCommentPayload,
-      issue: {
-        ...baseCommentPayload['issue'],
-        labels: [bugLabel],
+      status: 'valid',
+      event: {
+        ...baseCommentEvent,
+        issue: {
+          ...baseCommentEvent['issue'],
+          labelNames: ['bug'],
+        },
       },
-    }, baseConfig);
+    }, baseConfig, fakeGithub);
 
     expect(core.setOutput).toHaveBeenCalledWith('result', true);
 
@@ -127,12 +126,17 @@ describe('issueCommentAction', () => {
 
   it('skips when commenter is the issue creator', async () => {
     await issueCommentAction({
-      ...baseCommentPayload,
-      comment: {
-        ...baseCommentPayload['comment'],
-        user: { login: 'issueOwner' },
+      status: 'valid',
+      event: {
+        ...baseCommentEvent,
+        comment: {
+          ...baseCommentEvent['comment'],
+          authorLogin: 'issueOwner',
+        },
       },
-    }, baseConfig);
+    }, baseConfig, fakeGithub);
+
+    expect(fakeGithub['deleteIssueComment']).not.toHaveBeenCalled();
 
     expect(core.setOutput).toHaveBeenCalledWith('result', true);
 
@@ -141,26 +145,34 @@ describe('issueCommentAction', () => {
 
   it('skips when commenter is an owner', async () => {
     await issueCommentAction({
-      ...baseCommentPayload,
-      comment: {
-        ...baseCommentPayload['comment'],
-        author_association: 'OWNER',
+      status: 'valid',
+      event: {
+        ...baseCommentEvent,
+        comment: {
+          ...baseCommentEvent['comment'],
+          authorRole: 'owner',
+        },
       },
-    }, baseConfig);
+    }, baseConfig, fakeGithub);
+
+    expect(fakeGithub['deleteIssueComment']).not.toHaveBeenCalled();
 
     expect(core.setOutput).toHaveBeenCalledWith('result', true);
 
     return;
   });
 
-  it('sets failed when comment or issue user is null', async () => {
+  it('sets failed when comment author is unknown', async () => {
     await issueCommentAction({
-      ...baseCommentPayload,
-      comment: {
-        ...baseCommentPayload['comment'],
-        user: null,
+      status: 'valid',
+      event: {
+        ...baseCommentEvent,
+        comment: {
+          ...baseCommentEvent['comment'],
+          authorLogin: null,
+        },
       },
-    }, baseConfig);
+    }, baseConfig, fakeGithub);
 
     expect(core.setFailed).toHaveBeenCalled();
 
@@ -171,11 +183,14 @@ describe('issueCommentAction', () => {
 
   it('sets failed on unsupported action', async () => {
     await issueCommentAction({
-      ...baseCommentPayload,
-      action: 'deleted',
-    }, baseConfig);
+      status: 'valid',
+      event: {
+        ...baseCommentEvent,
+        action: 'deleted',
+      },
+    }, baseConfig, fakeGithub);
 
-    expect(core.setFailed).toHaveBeenCalled();
+    expect(core.setFailed).toHaveBeenCalledWith('The "deleted" action is not supported');
 
     expect(core.setOutput).toHaveBeenCalledWith('result', false);
 
@@ -183,10 +198,13 @@ describe('issueCommentAction', () => {
   });
 
   it('sets failed when issueLimitCommenter is false', async () => {
-    await issueCommentAction(baseCommentPayload, {
+    await issueCommentAction({
+      status: 'valid',
+      event: baseCommentEvent,
+    }, {
       ...baseConfig,
       issueLimitCommenter: false,
-    });
+    }, fakeGithub);
 
     expect(core.setFailed).toHaveBeenCalled();
 
@@ -195,29 +213,19 @@ describe('issueCommentAction', () => {
     return;
   });
 
-  it('sets failed when issue user is null', async () => {
+  it('sets failed when issue author is unknown', async () => {
     await issueCommentAction({
-      ...baseCommentPayload,
-      issue: {
-        ...baseCommentPayload['issue'],
-        user: null,
+      status: 'valid',
+      event: {
+        ...baseCommentEvent,
+        issue: {
+          ...baseCommentEvent['issue'],
+          authorLogin: null,
+        },
       },
-    }, baseConfig);
+    }, baseConfig, fakeGithub);
 
     expect(core.setFailed).toHaveBeenCalled();
-
-    expect(core.setOutput).toHaveBeenCalledWith('result', false);
-
-    return;
-  });
-
-  it('sets failed on non-empty but structurally invalid payload', async () => {
-    await issueCommentAction({
-      action: 'created',
-      comment: 'not-an-object',
-    }, baseConfig);
-
-    expect(core.setFailed).toHaveBeenCalledWith('The payload for "issue_comment" is invalid');
 
     expect(core.setOutput).toHaveBeenCalledWith('result', false);
 
@@ -225,9 +233,12 @@ describe('issueCommentAction', () => {
   });
 
   it('deletes comment from outsider on gated issue', async () => {
-    await issueCommentAction(baseCommentPayload, baseConfig);
+    await issueCommentAction({
+      status: 'valid',
+      event: baseCommentEvent,
+    }, baseConfig, fakeGithub);
 
-    expect(deleteIssueComment).toHaveBeenCalledWith('IC_abc123', baseConfig);
+    expect(fakeGithub['deleteIssueComment']).toHaveBeenCalledWith('IC_abc123');
 
     expect(core.setOutput).toHaveBeenCalledWith('result', true);
 
@@ -244,9 +255,19 @@ describe('issueCommentAction', () => {
  */
 describe('issuesAction', () => {
   it('sets failed on empty payload', async () => {
-    await issuesAction({}, baseConfig, []);
+    await issuesAction({ status: 'empty' }, baseConfig, [], fakeGithub);
 
-    expect(core.setFailed).toHaveBeenCalled();
+    expect(core.setFailed).toHaveBeenCalledWith('The payload for "issues" is empty');
+
+    expect(core.setOutput).toHaveBeenCalledWith('result', false);
+
+    return;
+  });
+
+  it('sets failed on invalid payload', async () => {
+    await issuesAction({ status: 'invalid' }, baseConfig, [], fakeGithub);
+
+    expect(core.setFailed).toHaveBeenCalledWith('The payload for "issues" is invalid');
 
     expect(core.setOutput).toHaveBeenCalledWith('result', false);
 
@@ -255,11 +276,14 @@ describe('issuesAction', () => {
 
   it('sets failed on unsupported action', async () => {
     await issuesAction({
-      ...baseIssuePayload,
-      action: 'labeled',
-    }, baseConfig, []);
+      status: 'valid',
+      event: {
+        ...baseIssueEvent,
+        action: 'labeled',
+      },
+    }, baseConfig, [], fakeGithub);
 
-    expect(core.setFailed).toHaveBeenCalled();
+    expect(core.setFailed).toHaveBeenCalledWith('The "labeled" action is not supported');
 
     expect(core.setOutput).toHaveBeenCalledWith('result', false);
 
@@ -268,12 +292,15 @@ describe('issuesAction', () => {
 
   it('skips when issue lacks wanted labels', async () => {
     await issuesAction({
-      ...baseIssuePayload,
-      issue: {
-        ...baseIssuePayload['issue'],
-        labels: [bugLabel],
+      status: 'valid',
+      event: {
+        ...baseIssueEvent,
+        issue: {
+          ...baseIssueEvent['issue'],
+          labelNames: ['bug'],
+        },
       },
-    }, baseConfig, []);
+    }, baseConfig, [], fakeGithub);
 
     expect(core.setOutput).toHaveBeenCalledWith('result', true);
 
@@ -282,14 +309,17 @@ describe('issuesAction', () => {
     return;
   });
 
-  it('sets failed when opened issue user is null', async () => {
+  it('sets failed when opened issue author is unknown', async () => {
     await issuesAction({
-      ...baseIssuePayload,
-      issue: {
-        ...baseIssuePayload['issue'],
-        user: null,
+      status: 'valid',
+      event: {
+        ...baseIssueEvent,
+        issue: {
+          ...baseIssueEvent['issue'],
+          authorLogin: null,
+        },
       },
-    }, baseConfig, []);
+    }, baseConfig, [], fakeGithub);
 
     expect(core.setFailed).toHaveBeenCalled();
 
@@ -299,13 +329,18 @@ describe('issuesAction', () => {
   });
 
   it('welcomes a sponsoring user who opens an issue', async () => {
-    await issuesAction(baseIssuePayload, baseConfig, [{
+    await issuesAction({
+      status: 'valid',
+      event: baseIssueEvent,
+    }, baseConfig, [{
       type: 'github-api' as const,
       login: 'testUser',
       amount: 500,
-    }]);
+    }], fakeGithub);
 
-    expect(addIssueComment).toHaveBeenCalledWith('I_abc123', 'Welcome!', baseConfig);
+    expect(fakeGithub['addIssueComment']).toHaveBeenCalledWith('I_abc123', 'Welcome!');
+
+    expect(fakeGithub['closeIssue']).not.toHaveBeenCalled();
 
     expect(core.setOutput).toHaveBeenCalledWith('result', true);
 
@@ -314,26 +349,32 @@ describe('issuesAction', () => {
 
   it('welcomes an owner who opens an issue', async () => {
     await issuesAction({
-      ...baseIssuePayload,
-      issue: {
-        ...baseIssuePayload['issue'],
-        author_association: 'OWNER',
+      status: 'valid',
+      event: {
+        ...baseIssueEvent,
+        issue: {
+          ...baseIssueEvent['issue'],
+          authorRole: 'owner',
+        },
       },
-    }, baseConfig, []);
+    }, baseConfig, [], fakeGithub);
 
-    expect(addIssueComment).toHaveBeenCalledWith('I_abc123', 'Welcome!', baseConfig);
+    expect(fakeGithub['addIssueComment']).toHaveBeenCalledWith('I_abc123', 'Welcome!');
 
     return;
   });
 
   it('closes and locks an issue from a non-sponsor', async () => {
-    await issuesAction(baseIssuePayload, baseConfig, []);
+    await issuesAction({
+      status: 'valid',
+      event: baseIssueEvent,
+    }, baseConfig, [], fakeGithub);
 
-    expect(addIssueComment).toHaveBeenCalledWith('I_abc123', 'Not a sponsor.', baseConfig);
+    expect(fakeGithub['addIssueComment']).toHaveBeenCalledWith('I_abc123', 'Not a sponsor.');
 
-    expect(closeIssue).toHaveBeenCalledWith('I_abc123', baseConfig);
+    expect(fakeGithub['closeIssue']).toHaveBeenCalledWith('I_abc123');
 
-    expect(lockIssue).toHaveBeenCalledWith('I_abc123', baseConfig);
+    expect(fakeGithub['lockIssue']).toHaveBeenCalledWith('I_abc123');
 
     expect(core.setOutput).toHaveBeenCalledWith('result', true);
 
@@ -341,42 +382,47 @@ describe('issuesAction', () => {
   });
 
   it('still closes and locks when addIssueComment rejects on not-sponsor flow', async () => {
-    vi.mocked(addIssueComment).mockRejectedValueOnce(new Error('GraphQL error'));
+    fakeGithub['addIssueComment'].mockRejectedValueOnce(new Error('GraphQL error'));
 
-    await issuesAction(baseIssuePayload, baseConfig, []);
+    await issuesAction({
+      status: 'valid',
+      event: baseIssueEvent,
+    }, baseConfig, [], fakeGithub);
 
     expect(core.warning).toHaveBeenCalledWith('Failed to add issue comment, continuing to close and lock');
 
-    expect(closeIssue).toHaveBeenCalledWith('I_abc123', baseConfig);
+    expect(fakeGithub['closeIssue']).toHaveBeenCalledWith('I_abc123');
 
-    expect(lockIssue).toHaveBeenCalledWith('I_abc123', baseConfig);
+    expect(fakeGithub['lockIssue']).toHaveBeenCalledWith('I_abc123');
 
     return;
   });
 
   it('still locks the issue when closeIssue rejects', async () => {
-    vi.mocked(closeIssue).mockRejectedValueOnce(new Error('GraphQL error'));
+    fakeGithub['closeIssue'].mockRejectedValueOnce(new Error('GraphQL error'));
 
-    await issuesAction(baseIssuePayload, baseConfig, []);
+    await issuesAction({
+      status: 'valid',
+      event: baseIssueEvent,
+    }, baseConfig, [], fakeGithub);
 
     expect(core.warning).toHaveBeenCalledWith('Failed to close issue, continuing to lock');
 
-    expect(lockIssue).toHaveBeenCalledWith('I_abc123', baseConfig);
+    expect(fakeGithub['lockIssue']).toHaveBeenCalledWith('I_abc123');
 
     return;
   });
 
   it('locks an issue when closed with lock-on-close enabled', async () => {
     await issuesAction({
-      ...baseIssuePayload,
-      action: 'closed',
-      issue: {
-        ...baseIssuePayload['issue'],
-        locked: false,
+      status: 'valid',
+      event: {
+        ...baseIssueEvent,
+        action: 'closed',
       },
-    }, baseConfig, []);
+    }, baseConfig, [], fakeGithub);
 
-    expect(lockIssue).toHaveBeenCalledWith('I_abc123', baseConfig);
+    expect(fakeGithub['lockIssue']).toHaveBeenCalledWith('I_abc123');
 
     expect(core.setOutput).toHaveBeenCalledWith('result', true);
 
@@ -385,12 +431,15 @@ describe('issuesAction', () => {
 
   it('sets failed when closed and issueLockOnClose is false', async () => {
     await issuesAction({
-      ...baseIssuePayload,
-      action: 'closed',
+      status: 'valid',
+      event: {
+        ...baseIssueEvent,
+        action: 'closed',
+      },
     }, {
       ...baseConfig,
       issueLockOnClose: false,
-    }, []);
+    }, [], fakeGithub);
 
     expect(core.setFailed).toHaveBeenCalled();
 
@@ -401,15 +450,18 @@ describe('issuesAction', () => {
 
   it('skips lock when issue is already locked', async () => {
     await issuesAction({
-      ...baseIssuePayload,
-      action: 'closed',
-      issue: {
-        ...baseIssuePayload['issue'],
-        locked: true,
+      status: 'valid',
+      event: {
+        ...baseIssueEvent,
+        action: 'closed',
+        issue: {
+          ...baseIssueEvent['issue'],
+          locked: true,
+        },
       },
-    }, baseConfig, []);
+    }, baseConfig, [], fakeGithub);
 
-    expect(lockIssue).not.toHaveBeenCalled();
+    expect(fakeGithub['lockIssue']).not.toHaveBeenCalled();
 
     expect(core.setOutput).toHaveBeenCalledWith('result', true);
 

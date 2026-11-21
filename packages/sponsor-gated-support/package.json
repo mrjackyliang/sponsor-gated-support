@@ -1,6 +1,6 @@
 {
   "name": "sponsor-gated-support",
-  "version": "2.0.12",
+  "version": "2.0.13",
   "license": "MIT",
   "exports": {
     ".": {
@@ -18,13 +18,14 @@
     "dev:local": "local-action run . src/index.ts .env",
     "check": "nova utility run-scripts --sequential \"check:*\"",
     "check:lint": "eslint ./ --max-warnings=0",
-    "check:types-app": "nova utility type-check --project tsconfig.json",
+    "check:types-source": "nova utility type-check --project tsconfig.json",
     "check:types-config": "nova utility type-check --project tsconfig.config.json",
     "check:types-tests": "nova utility type-check --project tsconfig.tests.json",
     "check:test": "vitest run",
+    "check:coverage": "vitest run --coverage",
     "build": "nova utility run-scripts --sequential --node-env production \"build:*\"",
     "build:reset": "shx rm -rf ./build",
-    "build:ncc": "npx ncc build src/index.ts -o build --source-map --license licenses.txt",
+    "build:ncc": "ncc build src/index.ts -o build --source-map --license licenses.txt",
     "postinstall": "npm run build"
   },
   "engines": {
@@ -33,7 +34,7 @@
   "dependencies": {
     "@actions/core": "1.10.1",
     "@actions/github": "6.0.0",
-    "@cbnventures/nova": "0.44.0",
+    "@cbnventures/nova": "0.49.0",
     "json-to-graphql-query": "2.3.0",
     "lodash": "4.18.1",
     "zod": "4.4.3"
@@ -43,9 +44,10 @@
     "@types/lodash": "4.17.25",
     "@types/node": "24.9.1",
     "@vercel/ncc": "0.38.1",
+    "@vitest/coverage-v8": "4.1.12",
     "eslint": "9.39.5",
     "shx": "0.4.0",
     "typescript": "6.0.3",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   }
 }

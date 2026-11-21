@@ -5,8 +5,8 @@
       "slug": "sponsor-gated-support"
     },
     "description": {
-      "short": "A GitHub Action that reserves issue support for sponsors and recognized contributors who back your work",
-      "long": "GitHub Action that keeps labeled support issues for the people who back your work. When a non-sponsor opens one, it replies, closes, and locks it; sponsors get a welcome instead. Eligibility comes from live GitHub Sponsors data, contributor status, or an exempt list, with a minimum sponsorship amount and an active-only check. Only the labels you list are gated; the default is a single support label."
+      "short": "A GitHub Action that saves issue support for your sponsors and recognized contributors",
+      "long": "Reply to, close, and lock support issues from anyone who isn't a sponsor, and welcome the ones who are. Eligibility checks live GitHub Sponsors data, contributors, and an exempt list, with an optional minimum amount and active-only rule."
     },
     "keywords": [
       "actions",
@@ -150,8 +150,112 @@
     ],
     "issueTemplate": {
       "bugReportFields": [
-        "nodejs"
-      ]
+        "github-action"
+      ],
+      "customQuestions": {
+        "bug": [
+          {
+            "type": "dropdown",
+            "id": "eligibility-rule",
+            "attributes": {
+              "label": "Affected Eligibility Rule",
+              "description": "Select the support eligibility rule involved.",
+              "options": [
+                "GitHub Sponsor",
+                "Contributor Role",
+                "Exempt List",
+                "Minimum Sponsorship Amount",
+                "Active Sponsorship Requirement",
+                "Issue Labels",
+                "Issue Comment Moderation",
+                "Close or Lock Behavior",
+                "Other"
+              ]
+            },
+            "validations": {
+              "required": true
+            }
+          },
+          {
+            "type": "dropdown",
+            "id": "owner-type",
+            "attributes": {
+              "label": "Repository Owner Type",
+              "description": "Select the type of account that owns the repository.",
+              "options": [
+                "Personal Account",
+                "Organization"
+              ]
+            },
+            "validations": {
+              "required": false
+            }
+          }
+        ],
+        "feature": [
+          {
+            "type": "dropdown",
+            "id": "eligibility-rule",
+            "attributes": {
+              "label": "Affected Eligibility Rule",
+              "description": "Select the support eligibility rule involved.",
+              "options": [
+                "GitHub Sponsor",
+                "Contributor Role",
+                "Exempt List",
+                "Minimum Sponsorship Amount",
+                "Active Sponsorship Requirement",
+                "Issue Labels",
+                "Issue Comment Moderation",
+                "Close or Lock Behavior",
+                "Other"
+              ]
+            },
+            "validations": {
+              "required": true
+            }
+          }
+        ],
+        "support": [
+          {
+            "type": "dropdown",
+            "id": "eligibility-rule",
+            "attributes": {
+              "label": "Affected Eligibility Rule",
+              "description": "Select the support eligibility rule involved.",
+              "options": [
+                "GitHub Sponsor",
+                "Contributor Role",
+                "Exempt List",
+                "Minimum Sponsorship Amount",
+                "Active Sponsorship Requirement",
+                "Issue Labels",
+                "Issue Comment Moderation",
+                "Close or Lock Behavior",
+                "Other"
+              ]
+            },
+            "validations": {
+              "required": true
+            }
+          },
+          {
+            "type": "dropdown",
+            "id": "owner-type",
+            "attributes": {
+              "label": "Repository Owner Type",
+              "description": "Select the type of account that owns the repository.",
+              "options": [
+                "Personal Account",
+                "Organization"
+              ]
+            },
+            "validations": {
+              "required": false
+            }
+          }
+        ]
+      }
     }
   },
   "workflows": [
@@ -181,7 +285,7 @@
         "release"
       ],
       "runsOn": "ubuntu-24.04",
-      "timeoutMinutes": 15,
+      "timeoutMinutes": 30,
       "build": [
         "./packages/sponsor-gated-support",
         "./apps/docs"
@@ -215,13 +319,16 @@
     "fundSources": [
       "https://github.com/sponsors/mrjackyliang",
       "https://liang.nyc/paypal"
-    ]
+    ],
+    "privacyPolicy": "https://github.com/mrjackyliang/mrjackyliang/blob/HEAD/PRIVACY.md",
+    "termsOfUse": "https://github.com/mrjackyliang/mrjackyliang/blob/HEAD/TERMS.md"
   },
   "readme": {
     "badges": [
       "github-release",
       "github-top-language",
       "github-license",
+      "coverage",
       "funding"
     ]
   },
@@ -294,6 +401,11 @@
         "enabled": true
       }
     },
+    "github-action": {
+      "sync-identity": {
+        "enabled": true
+      }
+    },
     "license": {
       "update-copyright": {
         "enabled": true
@@ -338,6 +450,11 @@
         "enabled": true
       },
       "update-introduction": {
+        "enabled": true
+      }
+    },
+    "tsconfig": {
+      "sync-references": {
         "enabled": true
       }
     },
@@ -565,6 +682,9 @@
     }
   },
   "settings": {
+    "coverage": {
+      "minimum": 95
+    },
     "lockStepVersioning": true,
     "runWorkspaces": {
       "cache": {

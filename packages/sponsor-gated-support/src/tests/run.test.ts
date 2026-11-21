@@ -8,13 +8,20 @@ import {
 } from 'vitest';
 
 import { issueCommentAction, issuesAction } from '../lib/action.js';
-import {
-  getConfig,
-  getContext,
-  getSponsors,
-  getSponsorsExempt,
-} from '../lib/utility.js';
+import { Runner as GithubAdapter } from '../lib/github.js';
+import { getConfig, getSponsorsExempt } from '../lib/utility.js';
 import { runAction } from '../run.js';
+
+const fakeGithub = vi.hoisted(() => ({
+  addIssueComment: vi.fn(),
+  closeIssue: vi.fn(),
+  deleteIssueComment: vi.fn(),
+  getContext: vi.fn(),
+  getSponsors: vi.fn(),
+  lockIssue: vi.fn(),
+  parseIssueCommentEvent: vi.fn(),
+  parseIssuesEvent: vi.fn(),
+}));
 
 vi.mock('@actions/core', () => ({
   endGroup: vi.fn(),
@@ -26,10 +33,14 @@ vi.mock('@actions/core', () => ({
   warning: vi.fn(),
 }));
 
+vi.mock('../lib/github.js', () => ({
+  Runner: vi.fn(function FakeGithubAdapter() {
+    return fakeGithub;
+  }),
+}));
+
 vi.mock('../lib/utility.js', () => ({
   getConfig: vi.fn(),
-  getContext: vi.fn(),
-  getSponsors: vi.fn().mockResolvedValue([]),
   getSponsorsExempt: vi.fn().mockReturnValue([]),
 }));
 
@@ -62,15 +73,22 @@ const baseIssuesContext = {
   payload: { action: 'opened' },
 };
 
+const parsedCommentEvent = { status: 'invalid' as const };
+
+const parsedIssuesEvent = { status: 'empty' as const };
+
 beforeEach(() => {
   vi.clearAllMocks();
 
   vi.mocked(getConfig).mockReturnValue(baseConfig);
 
-  // @ts-expect-error Partial Context is sufficient for the properties runAction reads.
-  vi.mocked(getContext, true).mockReturnValue(baseCommentContext);
+  fakeGithub['getContext'].mockReturnValue(baseCommentContext);
 
-  vi.mocked(getSponsors).mockResolvedValue([]);
+  fakeGithub['getSponsors'].mockResolvedValue([]);
+
+  fakeGithub['parseIssueCommentEvent'].mockReturnValue(parsedCommentEvent);
+
+  fakeGithub['parseIssuesEvent'].mockReturnValue(parsedIssuesEvent);
 
   vi.mocked(getSponsorsExempt).mockReturnValue([]);
 
@@ -83,15 +101,25 @@ beforeEach(() => {
  * @since 1.0.1
  */
 describe('runAction', () => {
+  it('builds the GitHub adapter from the parsed configuration', async () => {
+    await runAction();
+
+    expect(GithubAdapter).toHaveBeenCalledWith(baseConfig);
+
+    return;
+  });
+
   it('routes issue_comment events to issueCommentAction', async () => {
-    // @ts-expect-error Partial Context is sufficient for the properties runAction reads.
-    vi.mocked(getContext, true).mockReturnValue(baseCommentContext);
+    fakeGithub['getContext'].mockReturnValue(baseCommentContext);
 
     await runAction();
 
+    expect(fakeGithub['parseIssueCommentEvent']).toHaveBeenCalledWith(baseCommentContext['payload']);
+
     expect(issueCommentAction).toHaveBeenCalledWith(
-      baseCommentContext['payload'],
+      parsedCommentEvent,
       baseConfig,
+      fakeGithub,
     );
 
     expect(issuesAction).not.toHaveBeenCalled();
@@ -100,10 +128,9 @@ describe('runAction', () => {
   });
 
   it('routes issues events to issuesAction', async () => {
-    // @ts-expect-error Partial Context is sufficient for the properties runAction reads.
-    vi.mocked(getContext, true).mockReturnValue(baseIssuesContext);
+    fakeGithub['getContext'].mockReturnValue(baseIssuesContext);
 
-    vi.mocked(getSponsors).mockResolvedValue([{
+    fakeGithub['getSponsors'].mockResolvedValue([{
       type: 'github-api',
       login: 'sponsor1',
       amount: 500,
@@ -117,8 +144,10 @@ describe('runAction', () => {
 
     await runAction();
 
+    expect(fakeGithub['parseIssuesEvent']).toHaveBeenCalledWith(baseIssuesContext['payload']);
+
     expect(issuesAction).toHaveBeenCalledWith(
-      baseIssuesContext['payload'],
+      parsedIssuesEvent,
       baseConfig,
       [
         {
@@ -132,6 +161,7 @@ describe('runAction', () => {
           amount: null,
         },
       ],
+      fakeGithub,
     );
 
     expect(issueCommentAction).not.toHaveBeenCalled();
@@ -140,8 +170,7 @@ describe('runAction', () => {
   });
 
   it('sets failed on unknown event', async () => {
-    // @ts-expect-error Partial Context is sufficient for the properties runAction reads.
-    vi.mocked(getContext, true).mockReturnValue({
+    fakeGithub['getContext'].mockReturnValue({
       eventName: 'pull_request',
       payload: {},
     });
@@ -166,10 +195,9 @@ describe('runAction', () => {
   });
 
   it('does not log GitHub or exempt sponsor data', async () => {
-    // @ts-expect-error Partial Context is sufficient for the properties runAction reads.
-    vi.mocked(getContext, true).mockReturnValue(baseIssuesContext);
+    fakeGithub['getContext'].mockReturnValue(baseIssuesContext);
 
-    vi.mocked(getSponsors).mockResolvedValue([{
+    fakeGithub['getSponsors'].mockResolvedValue([{
       type: 'github-api',
       login: 'privateSponsorLogin',
       amount: 73429,
@@ -193,7 +221,7 @@ describe('runAction', () => {
   });
 
   it('catches Error instances and calls setFailed with message', async () => {
-    vi.mocked(getSponsors).mockRejectedValue(new Error('Config parse failure'));
+    fakeGithub['getSponsors'].mockRejectedValue(new Error('Config parse failure'));
 
     await runAction();
 
@@ -205,7 +233,7 @@ describe('runAction', () => {
   });
 
   it('catches non-Error values and calls setFailed with stringified value', async () => {
-    vi.mocked(getSponsors).mockRejectedValue('unexpected string error');
+    fakeGithub['getSponsors'].mockRejectedValue('unexpected string error');
 
     await runAction();
 
@@ -217,10 +245,9 @@ describe('runAction', () => {
   });
 
   it('merges GitHub sponsors and exempt sponsors', async () => {
-    // @ts-expect-error Partial Context is sufficient for the properties runAction reads.
-    vi.mocked(getContext, true).mockReturnValue(baseIssuesContext);
+    fakeGithub['getContext'].mockReturnValue(baseIssuesContext);
 
-    vi.mocked(getSponsors).mockResolvedValue([
+    fakeGithub['getSponsors'].mockResolvedValue([
       {
         type: 'github-api',
         login: 'sponsor1',
@@ -242,7 +269,7 @@ describe('runAction', () => {
     await runAction();
 
     expect(issuesAction).toHaveBeenCalledWith(
-      baseIssuesContext['payload'],
+      parsedIssuesEvent,
       baseConfig,
       [
         {
@@ -261,6 +288,7 @@ describe('runAction', () => {
           amount: null,
         },
       ],
+      fakeGithub,
     );
 
     return;

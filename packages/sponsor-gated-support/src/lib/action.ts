@@ -1,27 +1,16 @@
 import * as core from '@actions/core';
-import _ from 'lodash';
-
-import { issueCommentPayload, issuesPayload } from './schema.js';
-import {
-  addIssueComment,
-  closeIssue,
-  deleteIssueComment,
-  lockIssue,
-} from './utility.js';
 
 import type {
   Lib_Action_IssueCommentAction_Config,
-  Lib_Action_IssueCommentAction_Data,
-  Lib_Action_IssueCommentAction_IssueLabelNames,
-  Lib_Action_IssueCommentAction_ParsedPayload,
-  Lib_Action_IssueCommentAction_Payload,
+  Lib_Action_IssueCommentAction_Event,
+  Lib_Action_IssueCommentAction_Github,
+  Lib_Action_IssueCommentAction_ParsedEvent,
   Lib_Action_IssueCommentAction_Returns,
   Lib_Action_IssuesAction_Config,
-  Lib_Action_IssuesAction_Data,
-  Lib_Action_IssuesAction_IssueLabelNames,
+  Lib_Action_IssuesAction_Event,
+  Lib_Action_IssuesAction_Github,
   Lib_Action_IssuesAction_Login,
-  Lib_Action_IssuesAction_ParsedPayload,
-  Lib_Action_IssuesAction_Payload,
+  Lib_Action_IssuesAction_ParsedEvent,
   Lib_Action_IssuesAction_Returns,
   Lib_Action_IssuesAction_Sponsors,
   Lib_Action_IssuesAction_SponsorsLogins,
@@ -33,15 +22,16 @@ import type {
  * Deletes comments left on gated issues by users who are not the
  * issue creator or a recognized member, owner, or contributor.
  *
- * @param {Lib_Action_IssueCommentAction_Payload} payload - Payload.
- * @param {Lib_Action_IssueCommentAction_Config}  config  - Config.
+ * @param {Lib_Action_IssueCommentAction_ParsedEvent} parsedEvent - Parsed event.
+ * @param {Lib_Action_IssueCommentAction_Config}      config      - Config.
+ * @param {Lib_Action_IssueCommentAction_Github}      github      - Github.
  *
  * @returns {Lib_Action_IssueCommentAction_Returns}
  *
  * @since 1.0.1
  */
-export async function issueCommentAction(payload: Lib_Action_IssueCommentAction_Payload, config: Lib_Action_IssueCommentAction_Config): Lib_Action_IssueCommentAction_Returns {
-  if (_.isEmpty(payload) === true) {
+export async function issueCommentAction(parsedEvent: Lib_Action_IssueCommentAction_ParsedEvent, config: Lib_Action_IssueCommentAction_Config, github: Lib_Action_IssueCommentAction_Github): Lib_Action_IssueCommentAction_Returns {
+  if (parsedEvent['status'] === 'empty') {
     core.setFailed('The payload for "issue_comment" is empty');
 
     core.setOutput('result', false);
@@ -49,10 +39,8 @@ export async function issueCommentAction(payload: Lib_Action_IssueCommentAction_
     return;
   }
 
-  const parsedPayload: Lib_Action_IssueCommentAction_ParsedPayload = issueCommentPayload.safeParse(payload);
-
   // If the "issue_comment" payload is invalid.
-  if (parsedPayload.success === false) {
+  if (parsedEvent['status'] === 'invalid') {
     core.setFailed('The payload for "issue_comment" is invalid');
 
     core.setOutput('result', false);
@@ -60,15 +48,14 @@ export async function issueCommentAction(payload: Lib_Action_IssueCommentAction_
     return;
   }
 
-  const data: Lib_Action_IssueCommentAction_Data = parsedPayload.data;
-  const issueLabelNames: Lib_Action_IssueCommentAction_IssueLabelNames = data['issue']['labels'].map((label) => label['name']);
+  const event: Lib_Action_IssueCommentAction_Event = parsedEvent['event'];
 
   // Check if the action is supported (so runner resources aren't wasted).
   if (
-    data['action'] !== 'created'
-    && data['action'] !== 'edited'
+    event['action'] !== 'created'
+    && event['action'] !== 'edited'
   ) {
-    core.setFailed(`The "${data['action']}" action is not supported`);
+    core.setFailed(`The "${event['action']}" action is not supported`);
 
     core.setOutput('result', false);
 
@@ -87,7 +74,7 @@ export async function issueCommentAction(payload: Lib_Action_IssueCommentAction_
   // Skip if the issue does not have wanted labels.
   if (
     config['issueLabels'].length !== 0
-    && issueLabelNames.some((issueLabelName) => config['issueLabels'].includes(issueLabelName)) === false
+    && event['issue']['labelNames'].some((issueLabelName) => config['issueLabels'].includes(issueLabelName)) === false
   ) {
     core.info('Skipping "issue_comment" action, issue does not have wanted labels');
 
@@ -96,12 +83,12 @@ export async function issueCommentAction(payload: Lib_Action_IssueCommentAction_
     return;
   }
 
-  core.info(`Running tasks for when an issue comment is ${data['action']}`);
+  core.info(`Running tasks for when an issue comment is ${event['action']}`);
 
   // Check if the user exists for the issue.
   if (
-    data['comment']['user'] === null
-    || data['issue']['user'] === null
+    event['comment']['authorLogin'] === null
+    || event['issue']['authorLogin'] === null
   ) {
     core.setFailed('An issue comment was created or edited, however the comment and/or issue user information does not exist');
 
@@ -112,11 +99,11 @@ export async function issueCommentAction(payload: Lib_Action_IssueCommentAction_
 
   // Skip if comment ownership is the issue creator, member, owner, contributor, or collaborator.
   if (
-    data['comment']['user']['login'] === data['issue']['user']['login']
-    || data['comment']['author_association'] === 'MEMBER'
-    || data['comment']['author_association'] === 'OWNER'
-    || data['comment']['author_association'] === 'CONTRIBUTOR'
-    || data['comment']['author_association'] === 'COLLABORATOR'
+    event['comment']['authorLogin'] === event['issue']['authorLogin']
+    || event['comment']['authorRole'] === 'member'
+    || event['comment']['authorRole'] === 'owner'
+    || event['comment']['authorRole'] === 'contributor'
+    || event['comment']['authorRole'] === 'collaborator'
   ) {
     core.info('Skipping "issue_comment" action, issue comment is made by either issue creator, member, owner, contributor, or collaborator');
 
@@ -128,7 +115,7 @@ export async function issueCommentAction(payload: Lib_Action_IssueCommentAction_
   // Delete the comment.
   core.info('Deleting issue comment');
 
-  await deleteIssueComment(data['comment']['node_id'], config);
+  await github.deleteIssueComment(event['comment']['id']);
 
   core.setOutput('result', true);
 
@@ -141,16 +128,17 @@ export async function issueCommentAction(payload: Lib_Action_IssueCommentAction_
  * Welcomes sponsors who open gated issues, and closes and locks
  * issues opened by users who are not sponsoring or recognized.
  *
- * @param {Lib_Action_IssuesAction_Payload}  payload  - Payload.
- * @param {Lib_Action_IssuesAction_Config}   config   - Config.
- * @param {Lib_Action_IssuesAction_Sponsors} sponsors - Sponsors.
+ * @param {Lib_Action_IssuesAction_ParsedEvent} parsedEvent - Parsed event.
+ * @param {Lib_Action_IssuesAction_Config}      config      - Config.
+ * @param {Lib_Action_IssuesAction_Sponsors}    sponsors    - Sponsors.
+ * @param {Lib_Action_IssuesAction_Github}      github      - Github.
  *
  * @returns {Lib_Action_IssuesAction_Returns}
  *
  * @since 1.0.1
  */
-export async function issuesAction(payload: Lib_Action_IssuesAction_Payload, config: Lib_Action_IssuesAction_Config, sponsors: Lib_Action_IssuesAction_Sponsors): Lib_Action_IssuesAction_Returns {
-  if (_.isEmpty(payload) === true) {
+export async function issuesAction(parsedEvent: Lib_Action_IssuesAction_ParsedEvent, config: Lib_Action_IssuesAction_Config, sponsors: Lib_Action_IssuesAction_Sponsors, github: Lib_Action_IssuesAction_Github): Lib_Action_IssuesAction_Returns {
+  if (parsedEvent['status'] === 'empty') {
     core.setFailed('The payload for "issues" is empty');
 
     core.setOutput('result', false);
@@ -158,10 +146,8 @@ export async function issuesAction(payload: Lib_Action_IssuesAction_Payload, con
     return;
   }
 
-  const parsedPayload: Lib_Action_IssuesAction_ParsedPayload = issuesPayload.safeParse(payload);
-
   // If the "issues" payload is invalid.
-  if (parsedPayload.success === false) {
+  if (parsedEvent['status'] === 'invalid') {
     core.setFailed('The payload for "issues" is invalid');
 
     core.setOutput('result', false);
@@ -169,16 +155,15 @@ export async function issuesAction(payload: Lib_Action_IssuesAction_Payload, con
     return;
   }
 
-  const data: Lib_Action_IssuesAction_Data = parsedPayload.data;
-  const issueLabelNames: Lib_Action_IssuesAction_IssueLabelNames = data['issue']['labels'].map((label) => label['name']);
+  const event: Lib_Action_IssuesAction_Event = parsedEvent['event'];
   const sponsorsLogins: Lib_Action_IssuesAction_SponsorsLogins = sponsors.map((sponsor) => sponsor['login']);
 
   // Check if the action is supported (so runner resources aren't wasted).
   if (
-    data['action'] !== 'opened'
-    && data['action'] !== 'closed'
+    event['action'] !== 'opened'
+    && event['action'] !== 'closed'
   ) {
-    core.setFailed(`The "${data['action']}" action is not supported`);
+    core.setFailed(`The "${event['action']}" action is not supported`);
 
     core.setOutput('result', false);
 
@@ -188,7 +173,7 @@ export async function issuesAction(payload: Lib_Action_IssuesAction_Payload, con
   // Skip if the issue does not have wanted labels.
   if (
     config['issueLabels'].length !== 0
-    && issueLabelNames.some((issueLabelName) => config['issueLabels'].includes(issueLabelName)) === false
+    && event['issue']['labelNames'].some((issueLabelName) => config['issueLabels'].includes(issueLabelName)) === false
   ) {
     core.info('Skipping "issues" action, issue does not have wanted labels');
 
@@ -198,11 +183,11 @@ export async function issuesAction(payload: Lib_Action_IssuesAction_Payload, con
   }
 
   // If issue is opened.
-  if (data['action'] === 'opened') {
+  if (event['action'] === 'opened') {
     core.info('Running tasks for when an issue is open');
 
     // Check if the user exists for the issue.
-    if (data['issue']['user'] === null) {
+    if (event['issue']['authorLogin'] === null) {
       core.setFailed('The issue was opened, however the user information does not exist');
 
       core.setOutput('result', false);
@@ -210,24 +195,24 @@ export async function issuesAction(payload: Lib_Action_IssuesAction_Payload, con
       return;
     }
 
-    const login: Lib_Action_IssuesAction_Login = data['issue']['user']['login'];
+    const login: Lib_Action_IssuesAction_Login = event['issue']['authorLogin'];
 
     // Check if the user is either sponsoring (including exempt list), a member, an owner, a contributor, or a collaborator.
     if (
       sponsorsLogins.includes(login) === true
-      || data['issue']['author_association'] === 'MEMBER'
-      || data['issue']['author_association'] === 'OWNER'
-      || data['issue']['author_association'] === 'CONTRIBUTOR'
-      || data['issue']['author_association'] === 'COLLABORATOR'
+      || event['issue']['authorRole'] === 'member'
+      || event['issue']['authorRole'] === 'owner'
+      || event['issue']['authorRole'] === 'contributor'
+      || event['issue']['authorRole'] === 'collaborator'
     ) {
       core.info('Adding issue comment based on "ISSUE_MESSAGE_WELCOME"');
 
-      await addIssueComment(data['issue']['node_id'], config['issueMessageWelcome'], config);
+      await github.addIssueComment(event['issue']['id'], config['issueMessageWelcome']);
     } else {
       core.info('Adding issue comment based on "ISSUE_MESSAGE_NOT_SPONSOR"');
 
       try {
-        await addIssueComment(data['issue']['node_id'], config['issueMessageNotSponsor'], config);
+        await github.addIssueComment(event['issue']['id'], config['issueMessageNotSponsor']);
       } catch {
         core.warning('Failed to add issue comment, continuing to close and lock');
       }
@@ -235,19 +220,19 @@ export async function issuesAction(payload: Lib_Action_IssuesAction_Payload, con
       core.info('Closing issue');
 
       try {
-        await closeIssue(data['issue']['node_id'], config);
+        await github.closeIssue(event['issue']['id']);
       } catch {
         core.warning('Failed to close issue, continuing to lock');
       }
 
       core.info('Locking issue');
 
-      await lockIssue(data['issue']['node_id'], config);
+      await github.lockIssue(event['issue']['id']);
     }
   }
 
   // If issue is closed.
-  if (data['action'] === 'closed') {
+  if (event['action'] === 'closed') {
     core.info('Running tasks for when an issue is closed');
 
     // Check for the correct configuration (so runner resources aren't wasted).
@@ -260,7 +245,7 @@ export async function issuesAction(payload: Lib_Action_IssuesAction_Payload, con
     }
 
     // Skip if the issue is already locked.
-    if (data['issue']['locked'] === true) {
+    if (event['issue']['locked'] === true) {
       core.info('Skipping "issues" action, issue is already locked');
 
       core.setOutput('result', true);
@@ -271,7 +256,7 @@ export async function issuesAction(payload: Lib_Action_IssuesAction_Payload, con
     // Lock the issue.
     core.info('Locking issue');
 
-    await lockIssue(data['issue']['node_id'], config);
+    await github.lockIssue(event['issue']['id']);
   }
 
   core.setOutput('result', true);
