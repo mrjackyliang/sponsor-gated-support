@@ -1,5 +1,10 @@
 # sponsor-gated-support
 
+## 2.0.14 - 2026-11-27
+
+### UPDATED
+- The documentation site now loads Google Analytics and Microsoft Clarity directly instead of through Google Tag Manager and has its own fonts and colors, and the project uses Nova 0.54.0.
+
 ## 2.0.13 - 2026-11-21
 
 ### UPDATED
