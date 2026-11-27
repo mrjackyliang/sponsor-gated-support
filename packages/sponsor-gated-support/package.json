@@ -1,6 +1,6 @@
 {
   "name": "sponsor-gated-support",
-  "version": "2.0.13",
+  "version": "2.0.14",
   "license": "MIT",
   "exports": {
     ".": {
@@ -34,7 +34,7 @@
   "dependencies": {
     "@actions/core": "1.10.1",
     "@actions/github": "6.0.0",
-    "@cbnventures/nova": "0.49.0",
+    "@cbnventures/nova": "0.54.0",
     "json-to-graphql-query": "2.3.0",
     "lodash": "4.18.1",
     "zod": "4.4.3"

@@ -155,7 +155,7 @@
 .verdictComment {
   padding: 0.5rem 0.75rem;
   border-left: 2px solid var(--nova-color-accent-600);
-  background: color-mix(in srgb, var(--nova-color-accent-500) 4%, var(--nova-color-surface));
+  background: color-mix(in srgb, var(--nova-color-accent-500) 4%, var(--nova-color-background));
   border-radius: 0 2px 2px 0;
   font-family: var(--nova-font-body);
   font-size: 0.6875rem;
@@ -166,7 +166,7 @@
 
 .verdictCommentClosed {
   border-left-color: var(--nova-color-text-muted);
-  background: color-mix(in srgb, var(--nova-color-text-muted) 4%, var(--nova-color-surface));
+  background: color-mix(in srgb, var(--nova-color-text-muted) 4%, var(--nova-color-background));
 }
 
 /* =====================================================================
@@ -230,12 +230,12 @@
 
 :global([data-theme="dark"]) .verdictComment {
   border-left-color: var(--nova-color-accent-400);
-  background: color-mix(in srgb, var(--nova-color-accent-400) 8%, var(--nova-color-surface));
+  background: color-mix(in srgb, var(--nova-color-accent-400) 8%, var(--nova-color-background));
 }
 
 :global([data-theme="dark"]) .verdictCommentClosed {
   border-left-color: var(--nova-color-text-soft);
-  background: color-mix(in srgb, var(--nova-color-text-muted) 8%, var(--nova-color-surface));
+  background: color-mix(in srgb, var(--nova-color-text-muted) 8%, var(--nova-color-background));
 }
 
 /* =====================================================================

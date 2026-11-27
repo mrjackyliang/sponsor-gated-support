@@ -160,6 +160,10 @@ const config: DocusaurusNovaConfig = {
             light: '#C0392B',
             dark: '#E74C3C',
           },
+          success: {
+            light: '#1F8433',
+            dark: '#4ED068',
+          },
         },
         fonts: {
           display: 'DM Serif Display',
@@ -221,8 +225,11 @@ const config: DocusaurusNovaConfig = {
 
       // Analytics.
       analytics: {
-        gtm: {
-          containerId: 'GTM-NJN3C25S',
+        googleAnalytics: {
+          measurementId: 'G-4P0KHCMPS3',
+        },
+        clarity: {
+          projectId: 'zjw8yxuvyg',
         },
       },
 
@@ -454,10 +461,20 @@ const config: DocusaurusNovaConfig = {
             href: 'https://www.mrjackyliang.com/work/',
           },
         ],
-        legal: [{
-          label: 'License',
-          href: 'https://github.com/mrjackyliang/sponsor-gated-support/blob/HEAD/LICENSE',
-        }],
+        legal: [
+          {
+            label: 'License',
+            href: 'https://github.com/mrjackyliang/sponsor-gated-support/blob/HEAD/LICENSE',
+          },
+          {
+            label: 'Terms of Use',
+            href: 'https://mrjackyliang.github.io/mrjackyliang/terms/',
+          },
+          {
+            label: 'Privacy Policy',
+            href: 'https://mrjackyliang.github.io/mrjackyliang/privacy/',
+          },
+        ],
       },
       layout: {
         docs: {
